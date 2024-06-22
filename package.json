@@ -1,0 +1,31 @@
+{
+  "name": "graphql-schema-builder",
+  "version": "0.0.4",
+  "description": "Abstract schema builder for using with graphql",
+  "type": "commonjs",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "kalashnikov vlad",
+  "license": "ISC",
+  "directories": {
+    "example": "examples"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.2"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.10.6"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scala-12/graphql-schema-builder.git"
+  },
+  "bugs": {
+    "url": "https://github.com/scala-12/graphql-schema-builder/issues"
+  },
+  "homepage": "https://github.com/scala-12/graphql-schema-builder#readme"
+}
