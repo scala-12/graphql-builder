@@ -30,7 +30,7 @@ const camelToSnakeCase = (text: string, toUpper = false) => {
     return toUpper ? result.toUpperCase() : result.toLowerCase();
 }
 
-const createGqlScript = (
+const buildGqlScript = (
     isQuery: boolean,
     scriptName: string,
     mapping?: GqlArgsInfo,
@@ -51,6 +51,18 @@ const createGqlScript = (
 
     return `${operationName} ${params} { ${scriptName} ${schema} }`;
 };
+
+export const buildGqlQueryScript = (
+    scriptName: string,
+    mapping?: GqlArgsInfo,
+    resultBuilder?: EntrySchemaBuilder<any>
+) => buildGqlScript(true, scriptName, mapping, resultBuilder);
+
+export const buildGqlMutationScript = (
+    scriptName: string,
+    mapping?: GqlArgsInfo,
+    resultBuilder?: EntrySchemaBuilder<any>
+) => buildGqlScript(false, scriptName, mapping, resultBuilder);
 
 export type MutationOptions<
     TData = any,
@@ -126,7 +138,7 @@ export const createMutation = <
         }
     }
 
-    const script = createGqlScript(false, scriptName, argsInfo, builder);
+    const script = buildGqlMutationScript(scriptName, argsInfo, builder);
 
     return mutationInfo.callback(
         gql(script),
@@ -161,12 +173,7 @@ export const createQuery = <
         }
     }
 
-    const script = createGqlScript(
-        true,
-        scriptName,
-        argsInfo,
-        builder
-    );
+    const script = buildGqlQueryScript(scriptName, argsInfo, builder);
 
     return queryInfo.callback(
         gql(script),
