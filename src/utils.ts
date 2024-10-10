@@ -30,6 +30,8 @@ const camelToSnakeCase = (text: string, toUpper = false) => {
     return toUpper ? result.toUpperCase() : result.toLowerCase();
 }
 
+export const getGqlOperationName = (scriptName: string) => camelToSnakeCase(scriptName, true);
+
 const buildGqlScript = (
     isQuery: boolean,
     scriptName: string,
@@ -140,9 +142,14 @@ export const createMutation = <
 
     const script = buildGqlMutationScript(scriptName, argsInfo, builder);
 
+    const options = Object.assign({}, mutationInfo.options || {})
+    if (options.onError == null) {
+        options.onError = (err) => console.error(err.message);
+    }
+
     return mutationInfo.callback(
         gql(script),
-        mutationInfo.options
+        options
     );
 };
 
@@ -175,8 +182,13 @@ export const createQuery = <
 
     const script = buildGqlQueryScript(scriptName, argsInfo, builder);
 
+    const options = Object.assign({}, queryInfo.options || {})
+    if (options.onError == null) {
+        options.onError = (err) => console.error(err.message);
+    }
+
     return queryInfo.callback(
         gql(script),
-        queryInfo.options
+        options
     ) as ResultType;
 };
