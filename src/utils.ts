@@ -36,7 +36,7 @@ const buildGqlScript = (
     isQuery: boolean,
     scriptName: string,
     mapping?: GqlArgsInfo,
-    resultBuilder?: EntrySchemaBuilder<any>
+    resultBuilder?: EntrySchemaBuilder<object>
 ) => {
     let params = mapping?.get(scriptName)
         ?.map(([fName, fType]) =>
@@ -57,13 +57,13 @@ const buildGqlScript = (
 export const buildGqlQueryScript = (
     scriptName: string,
     mapping?: GqlArgsInfo,
-    resultBuilder?: EntrySchemaBuilder<any>
+    resultBuilder?: EntrySchemaBuilder<object>
 ) => buildGqlScript(true, scriptName, mapping, resultBuilder);
 
 export const buildGqlMutationScript = (
     scriptName: string,
     mapping?: GqlArgsInfo,
-    resultBuilder?: EntrySchemaBuilder<any>
+    resultBuilder?: EntrySchemaBuilder<object>
 ) => buildGqlScript(false, scriptName, mapping, resultBuilder);
 
 export type MutationOptions<
@@ -121,26 +121,14 @@ export interface QueryInfo<TCallback extends (QueryCallback<TData>), TData = any
 }
 
 export const createMutation = <
-    FieldEnum extends string = string,
-    SchemaBuilder extends EntrySchemaBuilder<FieldEnum> = EntrySchemaBuilder<FieldEnum>,
     TData = any
 >(
     scriptName: string,
     mutationInfo: MutationInfo<TData>,
-    defaultBuilder: (() => SchemaBuilder) | undefined,
-    resultBuilder?: SchemaBuilder | null,
+    resultBuilder?: EntrySchemaBuilder<object> | null,
     argsInfo?: GqlArgsInfo,
 ) => {
-    let builder: SchemaBuilder | undefined = undefined;
-    if (resultBuilder !== null) {
-        if (resultBuilder != null) {
-            builder = resultBuilder;
-        } else if (defaultBuilder != null) {
-            builder = defaultBuilder();
-        }
-    }
-
-    const script = buildGqlMutationScript(scriptName, argsInfo, builder);
+    const script = buildGqlMutationScript(scriptName, argsInfo, resultBuilder || undefined);
 
     const options = Object.assign({}, mutationInfo.options || {})
     if (options.onError == null) {
@@ -155,14 +143,11 @@ export const createMutation = <
 
 export const createQuery = <
     TData,
-    TCallback extends (QueryCallback<TData>),
-    FieldEnum extends string = string,
-    SchemaBuilder extends EntrySchemaBuilder<FieldEnum> = EntrySchemaBuilder<FieldEnum>,
+    TCallback extends (QueryCallback<TData>)
 >(
     scriptName: string,
     queryInfo: QueryInfo<TCallback, TData>,
-    defaultBuilder: (() => SchemaBuilder) | undefined,
-    resultBuilder?: SchemaBuilder | null,
+    resultBuilder?: EntrySchemaBuilder<object> | null,
     argsInfo?: GqlArgsInfo
 ) => {
     type ResultType = (
@@ -171,16 +156,7 @@ export const createQuery = <
         : QueryResult<TData>
     );
 
-    let builder: SchemaBuilder | undefined = undefined;
-    if (resultBuilder !== null) {
-        if (resultBuilder != null) {
-            builder = resultBuilder;
-        } else if (defaultBuilder != null) {
-            builder = defaultBuilder();
-        }
-    }
-
-    const script = buildGqlQueryScript(scriptName, argsInfo, builder);
+    const script = buildGqlQueryScript(scriptName, argsInfo, resultBuilder || undefined);
 
     const options = Object.assign({}, queryInfo.options || {})
     if (options.onError == null) {

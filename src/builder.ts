@@ -1,18 +1,50 @@
-export class CustomSchemaBuilder {
-    /** Set of simple fields names in schema */
-    protected _simple: Set<string>;
-    /** Map[name, subfields] of complex fields in schema */
-    protected _complex: Map<string, string>;
+type BuilderInit = (name: string) => EntrySchemaBuilder<object>;
 
-    constructor(
-        readonly entryName = ''
+/** Abstract class for schema creation. Entry should has only string keys */
+export abstract class EntrySchemaBuilder<Entry extends object> {
+    /** Set of simple fields names in schema */
+    protected _simple: Set<keyof Entry>;
+    /** Map[name, subfields] of complex fields in schema */
+    protected _complex: Map<keyof Entry, string>;
+    /** set of available simple fields names */
+    private _availableSimple?: ReadonlySet<string>;
+    /** map[name, info] of available complex fields */
+    private _availableComplex?: ReadonlyMap<string, BuilderInit>;
+
+    /**
+     * @param simpleFields array of available simple keys. may includes complex keys when complex setted
+     */
+    protected constructor(
+        readonly schemaName: string,
+
+        simpleFields: (keyof Entry)[],
+        readonly entryName?: string,
+        ...complex: [keyof Entry, BuilderInit][]
     ) {
         this._simple = new Set();
         this._complex = new Map();
+
+        if (complex != null && complex.length !== 0) {
+            this._availableComplex = new Map(
+                complex.map(([field, builderInit]) => [field as string, builderInit]));
+        }
+
+        const fields = new Set(simpleFields as string[]);
+        this._availableComplex?.forEach((_, field) => {
+            fields.delete(field);
+        });
+        this._availableSimple = fields;
+
+
+        if (this._availableSimple?.size === 0 && this._availableComplex?.size === 0) {
+            throw new Error("Schema does not include fields");
+        }
+
+        this.useSimpleFields(false);
     }
 
     /** Delete simple or complex field from schema if exists */
-    deleteField(field: string): this {
+    deleteField(field: keyof Entry): this {
         this._complex.delete(field);
         this._simple.delete(field);
 
@@ -30,84 +62,13 @@ export class CustomSchemaBuilder {
      * Set complex field builder for schema
      * @param builder Prepared builder
      */
-    addComplex(builder?: CustomSchemaBuilder): this {
-        if (builder != null) {
-            this._complex.set(
-                builder.entryName,
-                builder.build());
-        }
-
-        return this;
-    };
-
-    /** Add fields to schema */
-    addFields(...fields: string[]): this {
-        fields.forEach(e => this._simple.add(e));
-        return this;
-    };
-
-    /**
-     * build schema with setted fields
-     * @param withEntryName if false then dont add prefix with entry name
-     * @returns gql script string
-     */
-    build(withEntryName = true): string {
-        const simpleFields = Array.from(this._simple.values());
-        const complexFields = Array.from(this._complex.values());
-        const fields = simpleFields.concat(complexFields);
-
-        const fieldsSchema = fields.length ? `{${simpleFields.concat(complexFields).join(' ')}}` : '';
-
-        return (withEntryName ? (this.entryName + ' ') : '') + fieldsSchema;
-    }
-}
-
-export type BuilderInit = (name: string) => EntrySchemaBuilder<any>;
-
-export abstract class EntrySchemaBuilder<FieldEnum extends string> extends CustomSchemaBuilder {
-    /** set of available simple fields names */
-    private _availableSimple?: ReadonlySet<FieldEnum>;
-    /** map[name, info] of available complex fields */
-    private _availableComplex?: ReadonlyMap<FieldEnum, BuilderInit>;
-
-    /**
-     * @param fields Object or array of available fields. complex fields not required here
-     */
-    protected constructor(
-        readonly schemaName: string,
-
-        fields: object,
-        entryName?: string,
-        ...complex: [FieldEnum, BuilderInit][]
-    ) {
-        super(entryName);
-        const availableSimple = new Set(
-            Array.isArray(fields) ?
-                fields
-                : Object.values(fields));
-        if (availableSimple.size === 0) {
-            throw new Error("Schema does not include fields");
-        }
-
-        if (complex != null && complex.length !== 0) {
-            this._availableComplex = new Map(
-                complex.map(([field, builderInit]) => [field, builderInit]));
-        }
-
-        this._availableComplex?.forEach((_, field) => {
-            availableSimple.delete(field);
-        });
-
-        this._availableSimple = availableSimple;
-
-        this.useSimpleFields(false);
-    }
-
-    override addComplex(builder?: EntrySchemaBuilder<any>): this {
-        if (builder != null) {
-            if (this._availableComplex?.has(builder.entryName as FieldEnum)) {
+    addComplex(builder?: EntrySchemaBuilder<any>): this {
+        if (builder != null && builder.entryName) {
+            if (this._availableComplex?.has(builder.entryName)) {
                 // TODO check types before setting
-                return super.addComplex(builder);
+                this._complex.set(
+                    builder.entryName as keyof Entry,
+                    builder.build());
             }
         }
 
@@ -115,7 +76,7 @@ export abstract class EntrySchemaBuilder<FieldEnum extends string> extends Custo
     };
 
     /** get copy of complex field without settings */
-    getComplexBuilder<TComplex extends EntrySchemaBuilder<any>>(field: FieldEnum) {
+    getComplexBuilder<TComplex extends EntrySchemaBuilder<any>>(field: string) {
         const builderInit = this._availableComplex?.get(field);
         if (builderInit != null) {
             return (builderInit(field) as TComplex);
@@ -129,7 +90,9 @@ export abstract class EntrySchemaBuilder<FieldEnum extends string> extends Custo
     useSimpleFields(withComplex = false): this {
         if (this._availableSimple != null) {
             this._simple.clear();
-            this._availableSimple.forEach(e => this._simple.add(e));
+            this._availableSimple.forEach(
+                e => this._simple.add(e as keyof Entry)
+            );
         }
         if (this._availableComplex != null) {
             this._complex.clear();
@@ -150,7 +113,7 @@ export abstract class EntrySchemaBuilder<FieldEnum extends string> extends Custo
      * If added complex field, then all subfields will be added
      * @param fields added fields
      */
-    override addFields(...fields: FieldEnum[]): this {
+    addFields(...fields: (keyof Entry)[]): this {
         enum FieldType {
             COMPLEX,
             SIMPLE,
@@ -159,11 +122,11 @@ export abstract class EntrySchemaBuilder<FieldEnum extends string> extends Custo
         const groupedFields = fields.reduce(
             (acc, field) => {
                 let key: FieldType | undefined;
-                if (this._availableComplex?.has(field)) {
+                if (this._availableComplex?.has(field as string)) {
                     if (!this._complex.has(field)) {
                         key = FieldType.COMPLEX;
                     }
-                } else if (this._availableSimple?.has(field)) {
+                } else if (this._availableSimple?.has(field as string)) {
                     key = FieldType.SIMPLE;
                 }
                 if (key == null) {
@@ -174,20 +137,24 @@ export abstract class EntrySchemaBuilder<FieldEnum extends string> extends Custo
                 return acc;
             },
             {
-                [FieldType.COMPLEX]: [] as FieldEnum[],
-                [FieldType.SIMPLE]: [] as FieldEnum[],
-                [FieldType.UNDEFINED]: [] as FieldEnum[]
+                [FieldType.COMPLEX]: [] as (keyof Entry)[],
+                [FieldType.SIMPLE]: [] as (keyof Entry)[],
+                [FieldType.UNDEFINED]: [] as (keyof Entry)[]
             }
         );
 
         groupedFields[FieldType.COMPLEX].forEach(e => {
-            const builderInit = this._availableComplex?.get(e);
+            const builderInit = this._availableComplex?.get(e as string);
             if (builderInit != null) {
-                this.addComplex(builderInit(e));
+                this.addComplex(
+                    builderInit(e as string)
+                );
             }
         });
 
-        return super.addFields(...groupedFields[FieldType.SIMPLE]);
+        groupedFields[FieldType.SIMPLE].forEach(e => this._simple.add(e));
+
+        return this;
     };
 
     /**
@@ -195,8 +162,23 @@ export abstract class EntrySchemaBuilder<FieldEnum extends string> extends Custo
      * If added complex field, then all subfields will be added
      * @param fields added fields
      */
-    setFields(...fields: FieldEnum[]): this {
+    setFields(...fields: (keyof Entry)[]): this {
         this.clearFields()
         return this.addFields(...fields);
     };
+
+    /**
+     * build schema with setted fields
+     * @param withEntryName if false then dont add prefix with entry name
+     * @returns gql script string
+     */
+    build(withEntryName = true): string {
+        const simpleFields = Array.from(this._simple.values()) as string[];
+        const complexFields = Array.from(this._complex.values());
+        const fields = simpleFields.concat(complexFields);
+
+        const fieldsSchema = fields.length ? `{${simpleFields.concat(complexFields).join(' ')}}` : '';
+
+        return (withEntryName ? (this.entryName + ' ') : '') + fieldsSchema;
+    }
 }

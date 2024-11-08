@@ -1,6 +1,6 @@
 {
   "name": "graphql-schema-builder",
-  "version": "0.0.6",
+  "version": "0.1.0",
   "description": "Abstract schema builder for using with graphql",
   "type": "commonjs",
   "main": "src/index.ts",
