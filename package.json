@@ -1,31 +1,51 @@
 {
-  "name": "graphql-schema-builder",
-  "version": "0.1.0",
-  "description": "Abstract schema builder for using with graphql",
-  "type": "commonjs",
-  "main": "src/index.ts",
+  "name": "apollo-graphql-builder",
+  "version": "1.0.0",
+  "description": "Tool for automated creation of typed GraphQL scripts with Apollo",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "prepare": "npm run build",
+    "prepublishOnly": "echo \"npm test && npm run lint\" && exit 0",
+    "preversion": "echo \"npm run lint\" && exit 0",
+    "version": "npm run format && git add -A src",
+    "postversion": "git push && git push --tags",
+    "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier src/**/*.ts"
   },
   "author": "kalashnikov vlad",
-  "license": "ISC",
+  "license": "MIT",
+  "keywords": [
+    "graphql",
+    "schema",
+    "apollo",
+    "scripts",
+    "builder"
+  ],
   "directories": {
     "example": "examples"
   },
   "devDependencies": {
+    "prettier": "^3.5.1",
     "typescript": "^5.5.2"
   },
   "dependencies": {
-    "@apollo/client": "^3.10.6"
+    "@apollo/client": "^3.10.6",
+    "graphql-light-builder": "^0.0.5"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/scala-12/graphql-schema-builder.git"
+    "url": "git+https://github.com/scala-12/ts-apollo-graphql-builder.git"
   },
   "bugs": {
-    "url": "https://github.com/scala-12/graphql-schema-builder/issues"
+    "url": "https://github.com/scala-12/ts-apollo-graphql-builder/issues"
   },
-  "homepage": "https://github.com/scala-12/graphql-schema-builder#readme"
+  "homepage": "https://github.com/scala-12/ts-apollo-graphql-builder#readme"
 }
