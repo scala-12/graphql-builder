@@ -7,7 +7,7 @@ You can see the instructions for creating the schemas in `graphql-light-builder`
 
 ## Functions
 
-- `createMutation(scriptName, mutationInfo, resultSchema, refetchScripts, ...paramsMapping)` apollo mutation, is syntactic sugar for useMutation(gql(script), options)
+- `createMutation(scriptName, mutationInfo, resultSchema, paramsMapping, refetchScripts)` apollo mutation, is syntactic sugar for useMutation(gql(script), options)
 - `createQuery(scriptName, { callback, options }, resultSchema, ...paramsMapping)` apollo query, is syntactic sugar for useQuery(gql(script), options) and useLazyQuery(gql(script), options) (depends on callback)
 
 ## Examples
@@ -37,16 +37,17 @@ Base code:
         static create = <TResult extends Partial<IAuthor>>(
             mutationInfo: MutationInfo<Record<"authorCreate", TResult>>,
             resultSchema?: AuthorSchemaBuilder,
-        ) =>
-            createMutation(
+        ) => createMutation(
             "authorCreate",
             mutationInfo,
             resultSchema,
-            ["currentProfileAuthors"],
-            [AuthorField.NAME, "String"],
-            [AuthorField.HEADSHOT_IMAGE, "String"],
-            [AuthorField.LOCATION, "String"],
-            [AuthorField.AUDIENCE_FOCUS, "[String]"],
+            [
+                [AuthorField.NAME, "String"],
+                [AuthorField.HEADSHOT_IMAGE, "String"],
+                [AuthorField.LOCATION, "String"],
+                [AuthorField.AUDIENCE_FOCUS, "[String]"]
+            ],
+            ["currentProfileAuthors"]
         );
 
         static getCurrentProfileAuthors = <

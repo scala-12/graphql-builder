@@ -146,10 +146,10 @@ export const createMutation = <
   scriptName: Script,
   mutationInfo: MutationInfo<TData>,
   resultSchema?: SchemaBuilder<string> | string | null | undefined,
-  refetchScripts?: string[] | null | undefined,
-  ...paramsMapping: ParamTypeMapping[]
+  paramsMapping?: ParamTypeMapping[] | null | undefined,
+  refetchScripts?: string[] | null | undefined
 ) => {
-  const script = SchemaBuilder.createScript("mutation", scriptName, resultSchema, ...paramsMapping);
+  const script = SchemaBuilder.createScript("mutation", scriptName, resultSchema, ...(paramsMapping || []));
 
   const info = Object.assign({}, mutationInfo);
   if (refetchScripts?.length) {
