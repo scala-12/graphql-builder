@@ -1,7 +1,7 @@
 {
-  "name": "apollo-graphql-builder",
-  "version": "1.0.0",
-  "description": "Tool for automated creation of typed GraphQL scripts with Apollo",
+  "name": "graphql-light-builder",
+  "version": "0.0.7",
+  "description": "Simple tool for creation complex schemas with typed GraphQL queries/mutations",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -25,9 +25,9 @@
   "keywords": [
     "graphql",
     "schema",
-    "apollo",
-    "scripts",
-    "builder"
+    "builder",
+    "gql",
+    "apollo"
   ],
   "directories": {
     "example": "examples"
@@ -36,16 +36,12 @@
     "prettier": "^3.5.1",
     "typescript": "^5.5.2"
   },
-  "dependencies": {
-    "@apollo/client": "^3.10.6",
-    "graphql-light-builder": "^0.0.5"
-  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/scala-12/ts-apollo-graphql-builder.git"
+    "url": "git+https://github.com/scala-12/graphql-builder.git"
   },
   "bugs": {
-    "url": "https://github.com/scala-12/ts-apollo-graphql-builder/issues"
+    "url": "https://github.com/scala-12/graphql-builder/issues"
   },
-  "homepage": "https://github.com/scala-12/ts-apollo-graphql-builder#readme"
+  "homepage": "https://github.com/scala-12/graphql-builder/tree/main/ts-graphql-light-builder#readme"
 }

@@ -44,40 +44,31 @@ type LazyQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
 > = LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
 
-type SimpleQueryOptions<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> = QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
+type SimpleQueryOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = QueryHookOptions<
+  NoInfer<TData>,
+  NoInfer<TVariables>
+>;
 
-export type LazyQueryCallback<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> = (
+export type LazyQueryCallback<TData = unknown, TVariables extends OperationVariables = OperationVariables> = (
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryOptions<TData, TVariables>,
 ) => LazyQueryResultTuple<TData, TVariables>;
 
-type SimpleQueryCallback<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> = (
+type SimpleQueryCallback<TData = unknown, TVariables extends OperationVariables = OperationVariables> = (
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SimpleQueryOptions<TData, TVariables>,
 ) => QueryResult<TData, TVariables>;
 
-export type QueryCallback<
-  TData extends Record<string, TResult>,
-  TResult = unknown,
-> = LazyQueryCallback<TData> | SimpleQueryCallback<TData>;
+export type QueryCallback<TData extends Record<string, TResult>, TResult = unknown> =
+  | LazyQueryCallback<TData>
+  | SimpleQueryCallback<TData>;
 export interface QueryInfo<
   TCallback extends QueryCallback<TData, TResult>,
   TData extends Record<string, TResult>,
   TResult = unknown,
 > {
   callback: TCallback;
-  options?: TCallback extends LazyQueryCallback
-    ? LazyQueryOptions<TData>
-    : SimpleQueryOptions<TData>;
+  options?: TCallback extends LazyQueryCallback ? LazyQueryOptions<TData> : SimpleQueryOptions<TData>;
 }
 
 export type ParamTypeMapping = [string, string];
@@ -97,12 +88,7 @@ export const createQuery = <
     ? LazyQueryResultTuple<TData, OperationVariables>
     : QueryResult<TData>;
 
-  const script = SchemaBuilder.createScript(
-    "query",
-    scriptName,
-    resultSchema,
-    ...paramsMapping,
-  );
+  const script = SchemaBuilder.createScript("query", scriptName, resultSchema, ...paramsMapping);
 
   const customOptions = Object.assign({}, options || {});
   if (customOptions.onError == null) {
@@ -112,11 +98,7 @@ export const createQuery = <
   return callback(gql(script), options) as ResultType;
 };
 
-const setObjectField = <T extends object>(
-  obj: T,
-  value: unknown,
-  ...namePath: string[]
-) => {
+const setObjectField = <T extends object>(obj: T, value: unknown, ...namePath: string[]) => {
   if (namePath.length < 1) {
     throw new Error("Name path not valid");
   }
@@ -127,20 +109,14 @@ const setObjectField = <T extends object>(
     for (const name of namePath.slice(0, -1)) {
       let newSubvalue;
       if (name.includes("[")) {
-        const [arrName, idx] = name
-          .replace(new RegExp(/^(\w+)\[(\d+)\]$/g), "$1 $2")
-          .split(" ");
+        const [arrName, idx] = name.replace(new RegExp(/^(\w+)\[(\d+)\]$/g), "$1 $2").split(" ");
         const arrIdx = Number(idx);
         const arr = (subvalue[arrName] || Array(arrIdx + 1)) as {
           [k: string]: unknown;
         }[];
         newSubvalue = subvalue[arrName] != null ? { ...arr[arrIdx] } : {};
         Object.assign(subvalue, {
-          [arrName]: [
-            ...arr.slice(0, arrIdx),
-            newSubvalue,
-            ...arr.slice(arrIdx + 1),
-          ],
+          [arrName]: [...arr.slice(0, arrIdx), newSubvalue, ...arr.slice(arrIdx + 1)],
         });
       } else {
         newSubvalue = {
@@ -159,13 +135,7 @@ const setObjectField = <T extends object>(
 const setRefetchQueries = <TData extends Record<string, unknown>>(
   mutationInfo: MutationInfo<TData>,
   refetchQueries: string[],
-) =>
-  setObjectField(
-    mutationInfo,
-    refetchQueries.map(SchemaBuilder.createOperationName),
-    "options",
-    "refetchQueries",
-  );
+) => setObjectField(mutationInfo, refetchQueries.map(SchemaBuilder.createOperationName), "options", "refetchQueries");
 
 // TODO TResult must be setted
 export const createMutation = <
@@ -179,12 +149,7 @@ export const createMutation = <
   refetchScripts?: string[] | null | undefined,
   ...paramsMapping: ParamTypeMapping[]
 ) => {
-  const script = SchemaBuilder.createScript(
-    "mutation",
-    scriptName,
-    resultSchema,
-    ...paramsMapping,
-  );
+  const script = SchemaBuilder.createScript("mutation", scriptName, resultSchema, ...paramsMapping);
 
   const info = Object.assign({}, mutationInfo);
   if (refetchScripts?.length) {
