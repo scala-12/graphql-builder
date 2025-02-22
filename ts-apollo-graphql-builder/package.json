@@ -1,6 +1,6 @@
 {
   "name": "apollo-graphql-builder",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Tool for automated creation of typed GraphQL scripts with Apollo",
   "type": "module",
   "main": "dist/index.js",
@@ -20,7 +20,7 @@
     "format": "prettier --write src/**/*.ts",
     "format:check": "prettier src/**/*.ts"
   },
-  "author": "kalashnikov vlad",
+  "author": "Kalashnikov Vlad <spotless.quash@gmail.com>",
   "license": "MIT",
   "keywords": [
     "graphql",
@@ -42,10 +42,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/scala-12/graphql-builder.git"
+    "url": "https://github.com/scala-12/graphql-builder.git",
+    "directory": "ts-apollo-graphql-builder"
   },
   "bugs": {
-    "url": "https://github.com/scala-12/graphql-builder/issues"
+    "url": "https://github.com/scala-12/graphql-builder/issues",
+    "email": "spotless.quash+github@gmail.com"
   },
   "homepage": "https://github.com/scala-12/graphql-builder/tree/main/ts-apollo-graphql-builder#readme"
 }
