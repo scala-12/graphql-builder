@@ -7,7 +7,7 @@ You can see the instructions for creating the schemas in `graphql-light-builder`
 
 ## Functions
 
-- `createMutation(scriptName, mutationInfo, resultSchema, paramsMapping, refetchScripts)` apollo mutation, is syntactic sugar for useMutation(gql(script), options)
+- `createMutation(scriptName, mutationInfo, resultSchema, paramsMapping, refetchScripts)` apollo mutation, is syntactic sugar for useMutation(gql(script), options) with queries refetching and typed response
 - `createQuery(scriptName, { callback, options }, resultSchema, ...paramsMapping)` apollo query, is syntactic sugar for useQuery(gql(script), options) and useLazyQuery(gql(script), options) (depends on callback)
 
 ## Examples

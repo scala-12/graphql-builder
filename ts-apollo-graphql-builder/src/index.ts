@@ -71,6 +71,14 @@ export interface QueryInfo<
   options?: TCallback extends LazyQueryCallback ? LazyQueryOptions<TData> : SimpleQueryOptions<TData>;
 }
 
+/**
+ * Create useQuery or useLazyQuery with typed response
+ * @param scriptName Query name on server side
+ * @param queryInfo {callback: useQuery | useLazyQuery, options}
+ * @param resultSchema Result schema as builder, string or nothing
+ * @param paramsMapping Ordered query params with types as [param_name, param_type_as_string]
+ * @returns Result as useQuery | useLazyQuery with typed data
+ */
 export const createQuery = <
   TResult,
   TScript extends string,
@@ -135,7 +143,16 @@ const setRefetchQueries = <TData extends Record<string, unknown>>(
   refetchQueries: readonly string[],
 ) => setObjectField(mutationInfo, refetchQueries.map(SchemaBuilder.createOperationName), "options", "refetchQueries");
 
-// TODO TResult must be setted
+// TODO TResult must be settable
+/**
+ * Create mutation by apollo with typed response and query refetching
+ * @param scriptName Mutation name on server side
+ * @param mutationInfo {callback: useMutation, options}
+ * @param resultSchema Result schema as builder, string or nothing
+ * @param paramsMapping Ordered mutation params with types as [param_name, param_type_as_string]
+ * @param refetchScripts Array of queries for refetch
+ * @returns useMutation result with typed data
+ */
 export const createMutation = <
   TResult,
   Script extends string = string,
