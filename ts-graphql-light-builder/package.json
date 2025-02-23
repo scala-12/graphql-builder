@@ -1,6 +1,6 @@
 {
   "name": "graphql-light-builder",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Simple tool for creation complex schemas with typed GraphQL queries/mutations",
   "type": "module",
   "main": "dist/index.js",
