@@ -13,9 +13,9 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client";
 import { gql } from "@apollo/client";
-import { SchemaBuilder } from "graphql-light-builder";
+import { ParamTypeMapping, SchemaBuilder } from "graphql-light-builder";
 
-export { SchemaBuilder } from "graphql-light-builder";
+export { ParamTypeMapping, SchemaBuilder } from "graphql-light-builder";
 
 export type MutationOptions<
   TData = unknown,
@@ -71,8 +71,6 @@ export interface QueryInfo<
   options?: TCallback extends LazyQueryCallback ? LazyQueryOptions<TData> : SimpleQueryOptions<TData>;
 }
 
-export type ParamTypeMapping = [string, string];
-
 export const createQuery = <
   TResult,
   TScript extends string,
@@ -82,7 +80,7 @@ export const createQuery = <
   scriptName: TScript,
   { callback, options }: QueryInfo<TCallback, TData, TResult>,
   resultSchema?: SchemaBuilder<string> | string | null | undefined,
-  ...paramsMapping: ParamTypeMapping[]
+  ...paramsMapping: readonly ParamTypeMapping[]
 ) => {
   type ResultType = TCallback extends LazyQueryCallback
     ? LazyQueryResultTuple<TData, OperationVariables>
@@ -134,7 +132,7 @@ const setObjectField = <T extends object>(obj: T, value: unknown, ...namePath: s
 
 const setRefetchQueries = <TData extends Record<string, unknown>>(
   mutationInfo: MutationInfo<TData>,
-  refetchQueries: string[],
+  refetchQueries: readonly string[],
 ) => setObjectField(mutationInfo, refetchQueries.map(SchemaBuilder.createOperationName), "options", "refetchQueries");
 
 // TODO TResult must be setted
@@ -146,8 +144,8 @@ export const createMutation = <
   scriptName: Script,
   mutationInfo: MutationInfo<TData>,
   resultSchema?: SchemaBuilder<string> | string | null | undefined,
-  paramsMapping?: ParamTypeMapping[] | null | undefined,
-  refetchScripts?: string[] | null | undefined
+  paramsMapping?: readonly ParamTypeMapping[] | null | undefined,
+  refetchScripts?: readonly string[] | null | undefined,
 ) => {
   const script = SchemaBuilder.createScript("mutation", scriptName, resultSchema, ...(paramsMapping || []));
 
