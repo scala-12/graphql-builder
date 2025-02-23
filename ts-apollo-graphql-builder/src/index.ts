@@ -138,11 +138,6 @@ const setObjectField = <T extends object>(obj: T, value: unknown, ...namePath: s
   return result;
 };
 
-const setRefetchQueries = <TData extends Record<string, unknown>>(
-  mutationInfo: MutationInfo<TData>,
-  refetchQueries: readonly string[],
-) => setObjectField(mutationInfo, refetchQueries.map(SchemaBuilder.createOperationName), "options", "refetchQueries");
-
 // TODO TResult must be settable
 /**
  * Create mutation by apollo with typed response and query refetching
@@ -159,23 +154,22 @@ export const createMutation = <
   TData extends Record<Script, TResult> = Record<Script, TResult>,
 >(
   scriptName: Script,
-  mutationInfo: MutationInfo<TData>,
+  { callback, options }: MutationInfo<TData>,
   resultSchema?: SchemaBuilder<string> | string | null | undefined,
   paramsMapping?: readonly ParamTypeMapping[] | null | undefined,
   refetchScripts?: readonly string[] | null | undefined,
 ) => {
   const script = SchemaBuilder.createScript("mutation", scriptName, resultSchema, ...(paramsMapping || []));
 
-  const info = Object.assign({}, mutationInfo);
+  const customOptions = Object.assign({}, Object.assign({}, options || {}));
   if (refetchScripts?.length) {
-    setRefetchQueries(info, refetchScripts);
+    setObjectField(customOptions, refetchScripts.map(SchemaBuilder.createOperationName), "refetchQueries");
   }
 
-  const options = Object.assign({}, info.options || {});
   // TODO deprecated - make it optional or find other way
-  if (options.onError == null) {
-    options.onError = (err) => console.error(err.message);
+  if (customOptions.onError == null) {
+    customOptions.onError = (err) => console.error(err.message);
   }
 
-  return info.callback(gql(script), options);
+  return callback(gql(script), customOptions);
 };
