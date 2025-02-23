@@ -91,6 +91,27 @@ export abstract class SchemaBuilder<EntryField extends string> {
   }
 
   /**
+   * Set the same fields as in another builder
+   * @param another Builder with same type
+   * @returns builder with setted fields
+   */
+  copyFields(another?: this | null | undefined): this {
+    if (another) {
+      this._complex.clear();
+      if (another._complex.size) {
+        another._complex.forEach((v, k) => this._complex.set(k, v));
+      }
+
+      this._simple.clear();
+      if (another._simple.size) {
+        another._simple.forEach((v) => this._simple.add(v));
+      }
+    }
+
+    return this;
+  }
+
+  /**
    * Get copy of complex field without settings
    * @param field The name of the complex field that must be in the source schema
    */
