@@ -48,10 +48,7 @@ const MAIN_FIELDS: ParamTypeMapping[] = [
 ];
 
 class AuthorSchemaBuilder extends SchemaBuilder<AuthorField> {
-  constructor(
-    entryName?: string | null | undefined,
-    ...initFields: AuthorField[]
-  ) {
+  constructor(entryName?: string | null | undefined, ...initFields: AuthorField[]) {
     super(AuthorField, entryName, initFields);
   }
 }
@@ -63,14 +60,7 @@ class AuthorGql {
   static create = <TResult extends Partial<IAuthor>>(
     mutationInfo: MutationInfo<Record<AuthorScript.CREATE, TResult>>,
     resultSchema?: AuthorSchemaBuilder,
-  ) =>
-    createMutation(
-      AuthorScript.CREATE,
-      mutationInfo,
-      resultSchema,
-      [AuthorScript.PROFILE_AUTHORS],
-      ...MAIN_FIELDS,
-    );
+  ) => createMutation(AuthorScript.CREATE, mutationInfo, resultSchema, MAIN_FIELDS, [AuthorScript.PROFILE_AUTHORS]);
 
   static update = <TResult extends Partial<IAuthor>>(
     mutationInfo: MutationInfo<Record<AuthorScript.UPDATE, TResult>>,
@@ -80,20 +70,17 @@ class AuthorGql {
       AuthorScript.UPDATE,
       mutationInfo,
       resultSchema,
+      [[AuthorMutationExtraField.AUTHOR_ID, gqlStringType], ...MAIN_FIELDS],
       [AuthorScript.PROFILE_AUTHORS, AuthorScript.AUTHOR],
-      [AuthorMutationExtraField.AUTHOR_ID, gqlStringType],
-      ...MAIN_FIELDS,
     );
 
-  static delete = (
-    mutationInfo: MutationInfo<Record<AuthorScript.DELETE, boolean>>,
-  ) =>
+  static delete = (mutationInfo: MutationInfo<Record<AuthorScript.DELETE, boolean>>) =>
     createMutation(
       AuthorScript.DELETE,
       mutationInfo,
       null,
+      [[AuthorMutationExtraField.AUTHOR_ID, gqlStringType]],
       [AuthorScript.PROFILE_AUTHORS],
-      [AuthorMutationExtraField.AUTHOR_ID, gqlStringType],
     );
 
   static getCurrentProfileAuthors = <
@@ -103,12 +90,7 @@ class AuthorGql {
   >(
     queryInfo: QueryInfo<TCallback, TData>,
     resultSchema?: AuthorSchemaBuilder,
-  ) =>
-    createQuery(
-      AuthorScript.PROFILE_AUTHORS,
-      queryInfo,
-      resultSchema || new AuthorSchemaBuilder(),
-    );
+  ) => createQuery(AuthorScript.PROFILE_AUTHORS, queryInfo, resultSchema || new AuthorSchemaBuilder());
 
   static getAuthor = <
     TResult extends Partial<IAuthor>,
@@ -118,17 +100,13 @@ class AuthorGql {
     queryInfo: QueryInfo<TCallback, TData>,
     resultSchema?: AuthorSchemaBuilder,
   ) =>
-    createQuery(
-      AuthorScript.AUTHOR,
-      queryInfo,
-      resultSchema || new AuthorSchemaBuilder(),
-      [AuthorField.ID, gqlStringType],
-    );
+    createQuery(AuthorScript.AUTHOR, queryInfo, resultSchema || new AuthorSchemaBuilder(), [
+      AuthorField.ID,
+      gqlStringType,
+    ]);
 
-  static initSchema = (
-    initFields: AuthorField[],
-    entryName?: string | null | undefined,
-  ) => new AuthorSchemaBuilder(entryName, ...initFields);
+  static initSchema = (initFields: AuthorField[], entryName?: string | null | undefined) =>
+    new AuthorSchemaBuilder(entryName, ...initFields);
 }
 
 // answer with typed data
@@ -148,8 +126,7 @@ const { data, loading } = AuthorGql.getAuthor(
 data?.author[AuthorField.ID];
 
 // mutation with typed answer
-const [createAuthor, { data: creationData, loading: creationLoading }] =
-  AuthorGql.create({ callback: useMutation });
+const [createAuthor, { data: creationData, loading: creationLoading }] = AuthorGql.create({ callback: useMutation });
 
 // mutation result
 creationData?.[AuthorScript.CREATE][AuthorField.ID]; // equals to creationData?.authorCreate?.id

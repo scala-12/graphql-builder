@@ -6,6 +6,8 @@ const camelToSnakeCase = (text: string, toUpper = false) => {
   return toUpper ? result.toUpperCase() : result.toLowerCase();
 };
 
+export type ParamTypeMapping = [string, string];
+
 /** Abstract class for creating a schema. The entry must have only string keys */
 export abstract class SchemaBuilder<EntryField extends string> {
   /** Set of simple fields used to build schema */
@@ -205,7 +207,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
     scriptType: "query" | "mutation",
     name: string,
     resultSchema?: SchemaBuilder<string> | string | undefined | null,
-    ...paramsMapping: [string, string][]
+    ...paramsMapping: ParamTypeMapping[]
   ) {
     const args = paramsMapping?.map(([fName]) => `${fName}: $${fName}`).join(", ");
     const schema =

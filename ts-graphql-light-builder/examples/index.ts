@@ -1,4 +1,4 @@
-import { useQuery } from "@apollo/client";
+import { gql, useQuery } from "@apollo/client";
 import { SchemaBuilder } from "graphql-light-builder";
 
 enum PublisherField {
