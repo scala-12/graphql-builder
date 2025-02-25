@@ -1,6 +1,6 @@
 {
   "name": "apollo-graphql-builder",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Tool for automated creation of typed GraphQL scripts with Apollo",
   "type": "module",
   "main": "dist/index.js",

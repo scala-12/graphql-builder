@@ -5,6 +5,10 @@ With this lib you can to quickly edit complex Graphql schemes and scripts and ge
 
 You can see the instructions for creating the schemas in `graphql-light-builder`: [GitHub](https://github.com/scala-12/graphql-builder/tree/main/ts-graphql-light-builder), [npmjs](https://www.npmjs.com/package/graphql-light-builder).
 
+## Installation
+
+    npm i apollo-graphql-builder graphql-light-builder
+
 ## Functions
 
 - `createMutation(scriptName, mutationInfo, resultSchema, paramsMapping, refetchScripts)` apollo mutation, is syntactic sugar for useMutation(gql(script), options) with queries refetching and typed response
