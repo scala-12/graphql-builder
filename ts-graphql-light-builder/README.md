@@ -11,7 +11,8 @@ It is used as a dependency in `apollo-graphql-builder`: [GitHub](https://github.
 - `getComplex<TComplex>(field)` returns nested field builder; may be typed,
 - `useSimpleOnly(complexWithSimple = false)` sets only non-nested fields to schema; if complexWithSimple === true then one nested fields with non-nested for each,
 - `add(...fields)` adds a field to schema; if fields contains nested field then adds nested with non-nested fields,
-- `set(...fields)` set only the scpeified fields,
+- `set(...fields)` set only the specified fields,
+- `setSubfields(name, ...subfields)` set complex field with specified subfields,
 - `build(addEntryName = true)` build schema with provided fields. if addEntryName === true then schema name will be added,
 - `createScript(scriptType, name, resultSchema, ...paramsMapping)` create script by type (query or mutation) with name and resultSchema as answer (SchemaBuilder or string). If you need you can use paramMapping for args for typing graphql args.
 

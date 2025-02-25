@@ -92,6 +92,20 @@ export abstract class SchemaBuilder<EntryField extends string> {
   }
 
   /**
+   * Set subfields to complex field
+   * @param name Name of nested field
+   * @param subfields Subfield of nested field
+   */
+  setSubfields(name: EntryField, ...subfields: string[]): this {
+    if (this._originComplex?.has(name)) {
+      const complex = this.getComplex(name)?.set(...subfields);
+      this.addComplex(complex);
+    }
+
+    return this;
+  }
+
+  /**
    * Set the same fields as in another builder
    * @param another Builder with same type
    * @returns builder with setted fields
