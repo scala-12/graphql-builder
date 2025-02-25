@@ -76,14 +76,15 @@ export abstract class SchemaBuilder<EntryField extends string> {
 
   /**
    * Add complex field for schema builder if it available.
-   * If the builder exists, it will be replaced.
+   * If complex field used before, it will be replaced.
    * @param complex Builder of complex field with a given set of subfields
    */
   addComplex(complex: SchemaBuilder<string> | undefined | null): this {
     if (complex != null && complex.name) {
-      if (this._originComplex?.has(complex.name)) {
-        // TODO check types before setting
-        this._complex.set(complex.name as EntryField, complex.build());
+      if (complex.constructor === this.getComplex(complex.name)?.constructor) {
+        if (this._originComplex?.has(complex.name)) {
+          this._complex.set(complex.name as EntryField, complex.build());
+        }
       }
     }
 
@@ -99,12 +100,20 @@ export abstract class SchemaBuilder<EntryField extends string> {
     if (another) {
       this._complex.clear();
       if (another._complex.size) {
-        another._complex.forEach((v, k) => this._complex.set(k, v));
+        another._complex.forEach((schema, field) => {
+          if (this._originComplex?.has(field)) {
+            this._complex.set(field, schema);
+          }
+        });
       }
 
       this._simple.clear();
       if (another._simple.size) {
-        another._simple.forEach((v) => this._simple.add(v));
+        another._simple.forEach((field) => {
+          if (another._originSimple?.has(field)) {
+            this.add(field);
+          }
+        });
       }
     }
 
