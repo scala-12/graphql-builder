@@ -15,8 +15,6 @@ import type {
 import { gql } from "@apollo/client";
 import { ParamTypeMapping, SchemaBuilder } from "graphql-light-builder";
 
-export { ParamTypeMapping, SchemaBuilder } from "graphql-light-builder";
-
 export type MutationOptions<
   TData = unknown,
   TVariables = OperationVariables,

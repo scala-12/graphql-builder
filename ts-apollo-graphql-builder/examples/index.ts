@@ -1,13 +1,6 @@
 import { useMutation, useQuery } from "@apollo/client";
-import {
-  MutationInfo,
-  ParamTypeMapping,
-  QueryCallback,
-  QueryInfo,
-  SchemaBuilder,
-  createMutation,
-  createQuery,
-} from "apollo-graphql-builder";
+import { MutationInfo, QueryCallback, QueryInfo, createMutation, createQuery } from "apollo-graphql-builder";
+import { ParamTypeMapping, SchemaBuilder } from "graphql-light-builder";
 
 enum AuthorField {
   ID = "id",
