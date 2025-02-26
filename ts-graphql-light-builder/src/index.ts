@@ -250,14 +250,13 @@ export abstract class SchemaBuilder<EntryField extends string> {
   static createScript(
     scriptType: "query" | "mutation",
     name: string,
-    resultSchema?: SchemaBuilder<string> | string | undefined | null,
+    resultSchema: SchemaBuilder<string> | string | undefined | null = "",
     ...paramsMapping: ParamTypeMapping[]
   ) {
     const args = paramsMapping?.map(([fName]) => `${fName}: $${fName}`).join(", ");
     const schema =
       (args?.length ? `(${args})` : "") +
-        (resultSchema != null ? (typeof resultSchema === "string" ? resultSchema : resultSchema.build(false)) : null) ||
-      "";
+      (resultSchema != null ? (typeof resultSchema === "string" ? resultSchema : resultSchema.build(false)) : "");
 
     const operationName = `${scriptType} ${SchemaBuilder.createOperationName(name)}`;
 
