@@ -3,7 +3,7 @@
 This library is designed to create complex Graphql schemes and scripts with the ability to quickly edit them.
 It is used as a dependency in `apollo-graphql-builder`: [GitHub](https://github.com/scala-12/graphql-builder/tree/main/ts-apollo-graphql-builder), [npmjs](https://www.npmjs.com/package/apollo-graphql-builder)
 
-## Functions:
+## Functions
 
 - `remove(fieldName)` removes a field from the schema,
 - `clear()` removes all fields from schema,
@@ -19,70 +19,81 @@ It is used as a dependency in `apollo-graphql-builder`: [GitHub](https://github.
 ## Examples
 
 With this library you can create nested schemes.
+Details you can find in [examples/index.ts](https://github.com/scala-12/graphql-builder/tree/main/ts-graphql-light-builder/examples/index.ts)
 For example, let's create 3 constructors: Author, Book, Publisher.
 The fields will be used as an enumeration:
 
-    enum PublisherField {
-        NAME = 'name',
-        ADDRESS = 'address',
-    }
-    enum BookField {
-        TITLE = 'title',
-        PUBLISHER = 'publisher',
-    }
-    enum AuthorField {
-        ID = 'id',
-        NAME = 'name',
-        BOOKS = 'books',
-    }
+```ts
+enum PublisherField {
+    NAME = 'name',
+    ADDRESS = 'address',
+}
+enum BookField {
+    TITLE = 'title',
+    PUBLISHER = 'publisher',
+}
+enum AuthorField {
+    ID = 'id',
+    NAME = 'name',
+    BOOKS = 'books',
+}
+```
 
 Builders with nested builders:
 
-    class PublisherSchemaBuilder extends SchemaBuilder<PublisherField> {
-        constructor(entryName?: string | null | undefined, ...initFields: PublisherField[]) {
-            super(PublisherField, entryName, initFields);
-        }
+```ts
+class PublisherSchemaBuilder extends SchemaBuilder<PublisherField> {
+    constructor(entryName?: string | null | undefined, ...initFields: PublisherField[]) {
+        super(PublisherField, entryName, initFields);
     }
+}
 
-    class BookSchemaBuilder extends SchemaBuilder<BookField> {
-        constructor(entryName?: string | null | undefined, ...initFields: BookField[]) {
-            super(
-                BookField,
-                entryName,
-                initFields,
-                [BookField.PUBLISHER, (e) => new PublisherSchemaBuilder(e)]);
-        }
+class BookSchemaBuilder extends SchemaBuilder<BookField> {
+    constructor(entryName?: string | null | undefined, ...initFields: BookField[]) {
+        super(
+            BookField,
+            entryName,
+            initFields,
+            [BookField.PUBLISHER, (e) => new PublisherSchemaBuilder(e)]);
     }
+}
 
-    class AuthorSchemaBuilder extends SchemaBuilder<AuthorField> {
-        constructor(entryName?: string | null | undefined, ...initFields: AuthorField[]) {
-            super(
-                AuthorField,
-                entryName,
-                initFields,
-                [AuthorField.BOOKS, (e) => new BookSchemaBuilder(e)]
-            );
-        }
+class AuthorSchemaBuilder extends SchemaBuilder<AuthorField> {
+    constructor(entryName?: string | null | undefined, ...initFields: AuthorField[]) {
+        super(
+            AuthorField,
+            entryName,
+            initFields,
+            [AuthorField.BOOKS, (e) => new BookSchemaBuilder(e)]
+        );
     }
+}
+```
 
 To create a schema for an author without using nested fields, you need to run the command:
 
-    new AuthorSchemaBuilder("author").build();
+```ts
+new AuthorSchemaBuilder("author").build();
+```
 
 Result:
 
-    author {
-        id
-        name
-    }
+```
+author {
+    id
+    name
+}
+```
 
 To create a schema for the author using nested schemas, you need to run the following command:
 
-    const authorWithPublishers = (builder =>
-        builder.addComplex(
-            builder.getComplex<BookSchemaBuilder>(AuthorField.BOOKS)?.set(BookField.PUBLISHER)
-        )
-    )(new AuthorSchemaBuilder("author").clear()).build();
+```ts
+const authorWithPublishers = (builder =>
+    builder.addComplex(
+        builder.getComplex<BookSchemaBuilder>(AuthorField.BOOKS)?.set(BookField.PUBLISHER)
+    )
+)(new AuthorSchemaBuilder("author").clear()).build();
+```
 
 - `clear()` command clears the list of used fields for the author,
 - `addComplex()` adds a nested schema,
@@ -91,19 +102,24 @@ To create a schema for the author using nested schemas, you need to run the foll
 
 Result:
 
-    author {
-        book {
-            publishers {
-                name
-                address
-            }
+```
+author {
+    book {
+        publishers {
+            name
+            address
         }
     }
 
+}
+```
+
 If you want create query with Apollo, you can run code like this:
 
-    useQuery(
-        gql(
-            createScript("query", "getAuthor", new AuthorSchemaBuilder("author").build())
-        )
+```ts
+useQuery(
+    gql(
+        createScript("query", "getAuthor", new AuthorSchemaBuilder("author").build())
     )
+)
+```

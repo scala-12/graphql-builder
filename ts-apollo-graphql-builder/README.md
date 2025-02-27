@@ -7,7 +7,9 @@ You can see the instructions for creating the schemas in `graphql-light-builder`
 
 ## Installation
 
-    npm i apollo-graphql-builder graphql-light-builder
+```sh
+npm i @apollo/client apollo-graphql-builder graphql-light-builder
+```
 
 ## Functions
 
@@ -17,80 +19,84 @@ You can see the instructions for creating the schemas in `graphql-light-builder`
 ## Examples
 
 With this library you can create prepared queries and mutations.
-Details you can find in [examples/index.ts](https://github.com/scala-12/ts-apollo-graphql-builder/tree/main/examples)
+Details you can find in [examples/index.ts](https://github.com/scala-12/graphql-builder/tree/main/ts-apollo-graphql-builder/examples/index.ts)
 
 Base code:
 
-    enum AuthorField {
-        ID = "id",
-        NAME = "name",
-        HEADSHOT_IMAGE = "headshotImage",
-        LOCATION = "location",
-        AUDIENCE_FOCUS = "focus",
+```ts
+enum AuthorField {
+    ID = "id",
+    NAME = "name",
+    HEADSHOT_IMAGE = "headshotImage",
+    LOCATION = "location",
+    AUDIENCE_FOCUS = "focus",
+}
+
+class AuthorSchemaBuilder extends SchemaBuilder<AuthorField> {
+    constructor(
+        entryName?: string | null | undefined, ...initFields: AuthorField[]
+    ) {
+        super(AuthorField, entryName, initFields);
     }
+}
 
-    class AuthorSchemaBuilder extends SchemaBuilder<AuthorField> {
-        constructor(
-            entryName?: string | null | undefined, ...initFields: AuthorField[]
-        ) {
-            super(AuthorField, entryName, initFields);
-        }
-    }
+class AuthorGql {
+    static create = <TResult extends Partial<IAuthor>>(
+        mutationInfo: MutationInfo<Record<"authorCreate", TResult>>,
+        resultSchema?: AuthorSchemaBuilder,
+    ) => createMutation(
+        "authorCreate",
+        mutationInfo,
+        resultSchema,
+        [
+            [AuthorField.NAME, "String"],
+            [AuthorField.HEADSHOT_IMAGE, "String"],
+            [AuthorField.LOCATION, "String"],
+            [AuthorField.AUDIENCE_FOCUS, "[String]"]
+        ],
+        ["currentProfileAuthors"]
+    );
 
-    class AuthorGql {
-        static create = <TResult extends Partial<IAuthor>>(
-            mutationInfo: MutationInfo<Record<"authorCreate", TResult>>,
-            resultSchema?: AuthorSchemaBuilder,
-        ) => createMutation(
-            "authorCreate",
-            mutationInfo,
-            resultSchema,
-            [
-                [AuthorField.NAME, "String"],
-                [AuthorField.HEADSHOT_IMAGE, "String"],
-                [AuthorField.LOCATION, "String"],
-                [AuthorField.AUDIENCE_FOCUS, "[String]"]
-            ],
-            ["currentProfileAuthors"]
-        );
+    static getCurrentProfileAuthors = <
+        TResult extends Partial<IAuthor>,
+        TData extends Record<"currentProfileAuthors", TResult[]>,
+        TCallback extends QueryCallback<TData>,
+    >(
+        queryInfo: QueryInfo<TCallback, TData>,
+        resultSchema?: AuthorSchemaBuilder,
+    ) =>
+        createQuery(
+        "currentProfileAuthors",
+        queryInfo,
+        resultSchema || new AuthorSchemaBuilder(),
+    );
 
-        static getCurrentProfileAuthors = <
-            TResult extends Partial<IAuthor>,
-            TData extends Record<"currentProfileAuthors", TResult[]>,
-            TCallback extends QueryCallback<TData>,
-        >(
-            queryInfo: QueryInfo<TCallback, TData>,
-            resultSchema?: AuthorSchemaBuilder,
-        ) =>
-            createQuery(
-            "currentProfileAuthors",
-            queryInfo,
-            resultSchema || new AuthorSchemaBuilder(),
-        );
-
-        static initSchema = (
-            initFields: AuthorField[],
-            entryName?: string | null | undefined
-        ) => new AuthorSchemaBuilder(entryName, ...initFields);
-    }
+    static initSchema = (
+        initFields: AuthorField[],
+        entryName?: string | null | undefined
+    ) => new AuthorSchemaBuilder(entryName, ...initFields);
+}
+```
 
 With this code we can do mutation and query with typed answer:
 
-    const { data, loading } = AuthorGql.getAuthor(
-        {
-            callback: useQuery,
-            options: {
-                variables: {
-                    [AuthorField.ID]: "testId000",
-                },
-                fetchPolicy: "no-cache",
+```ts
+const { data, loading } = AuthorGql.getAuthor(
+    {
+        callback: useQuery,
+        options: {
+            variables: {
+                [AuthorField.ID]: "testId000",
             },
+            fetchPolicy: "no-cache",
         },
-        AuthorGql.initSchema([AuthorField.ID, AuthorField.NAME]),
-    );
-    let id = data?.author[AuthorField.ID];
+    },
+    AuthorGql.initSchema([AuthorField.ID, AuthorField.NAME]),
+);
+let id = data?.author[AuthorField.ID];
 
-    const [createAuthor, { data: creationData, loading: creationLoading }] =
-    AuthorGql.create({ callback: useMutation });
-    
-    id = creationData?.[AuthorScript.CREATE][AuthorField.ID];
+const [createAuthor, { data: creationData, loading: creationLoading }] =
+AuthorGql.create({ callback: useMutation });
+
+id = creationData?.[AuthorScript.CREATE][AuthorField.ID];
+```
