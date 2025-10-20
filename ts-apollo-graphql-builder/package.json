@@ -33,10 +33,12 @@
     "example": "examples"
   },
   "devDependencies": {
+    "@apollo/client": "^3.10.6",
+    "graphql-light-builder": "^0.3.1",
     "prettier": "^3.5.1",
     "typescript": "^5.5.2"
   },
-  "dependencies": {
+  "peerDependencies": {
     "@apollo/client": "^3.10.6",
     "graphql-light-builder": "^0.3.1"
   },
