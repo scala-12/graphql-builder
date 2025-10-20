@@ -1,73 +1,7 @@
-import type {
-  ApolloCache,
-  DefaultContext,
-  DocumentNode,
-  LazyQueryHookOptions,
-  LazyQueryResultTuple,
-  MutationHookOptions,
-  MutationTuple,
-  NoInfer,
-  OperationVariables,
-  QueryHookOptions,
-  QueryResult,
-  TypedDocumentNode,
-} from "@apollo/client";
+import type { LazyQueryResultTuple, OperationVariables, QueryResult } from "@apollo/client";
 import { gql } from "@apollo/client";
 import { ParamTypeMapping, SchemaBuilder } from "graphql-light-builder";
-
-export type MutationOptions<
-  TData = unknown,
-  TVariables = OperationVariables,
-  TContext = DefaultContext,
-  TCache extends ApolloCache<unknown> = ApolloCache<unknown>,
-> = MutationHookOptions<NoInfer<TData>, NoInfer<TVariables>, TContext, TCache>;
-
-export type MutationCallback<
-  TData = unknown,
-  TVariables = OperationVariables,
-  TContext = DefaultContext,
-  TCache extends ApolloCache<unknown> = ApolloCache<unknown>,
-> = (
-  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: MutationOptions<TData, TVariables, TContext, TCache>,
-) => MutationTuple<TData, TVariables, TContext, TCache>;
-
-export interface MutationInfo<TData = unknown> {
-  callback: MutationCallback<TData>;
-  options?: MutationOptions<TData>;
-}
-
-type LazyQueryOptions<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> = LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
-
-type SimpleQueryOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = QueryHookOptions<
-  NoInfer<TData>,
-  NoInfer<TVariables>
->;
-
-export type LazyQueryCallback<TData = unknown, TVariables extends OperationVariables = OperationVariables> = (
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: LazyQueryOptions<TData, TVariables>,
-) => LazyQueryResultTuple<TData, TVariables>;
-
-type SimpleQueryCallback<TData = unknown, TVariables extends OperationVariables = OperationVariables> = (
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SimpleQueryOptions<TData, TVariables>,
-) => QueryResult<TData, TVariables>;
-
-export type QueryCallback<TData extends Record<string, TResult>, TResult = unknown> =
-  | LazyQueryCallback<TData>
-  | SimpleQueryCallback<TData>;
-export interface QueryInfo<
-  TCallback extends QueryCallback<TData, TResult>,
-  TData extends Record<string, TResult>,
-  TResult = unknown,
-> {
-  callback: TCallback;
-  options?: TCallback extends LazyQueryCallback ? LazyQueryOptions<TData> : SimpleQueryOptions<TData>;
-}
+import { LazyQueryCallback, MutationInfo, QueryCallback, QueryInfo } from "./types";
 
 /**
  * Create useQuery or useLazyQuery with typed response
