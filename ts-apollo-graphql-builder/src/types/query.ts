@@ -1,11 +1,13 @@
 import type { LazyQueryHookOptions, NoInfer, OperationVariables, QueryHookOptions } from "@apollo/client";
 
 export type LazyQueryOptions<
-  TData = unknown,
+  TScript extends string = string,
+  TResult extends unknown = unknown,
   TVariables extends OperationVariables = OperationVariables,
-> = LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
+> = LazyQueryHookOptions<NoInfer<Record<TScript, TResult>>, NoInfer<TVariables>>;
 
-export type SimpleQueryOptions<
-  TData = unknown,
+export type ImmediateQueryOptions<
+  TScript extends string = string,
+  TResult extends unknown = unknown,
   TVariables extends OperationVariables = OperationVariables,
-> = QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
+> = QueryHookOptions<NoInfer<Record<TScript, TResult>>, NoInfer<TVariables>>;

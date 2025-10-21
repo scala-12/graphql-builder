@@ -1,24 +1,20 @@
 import { gql, useQuery } from "@apollo/client";
 import { ParamTypeMapping, SchemaBuilder } from "graphql-light-builder";
-import { SchemaBuilderType, SimpleQueryOptions } from "../types";
+import { ImmediateQueryOptions, SchemaBuilderType } from "../types";
 
-type Params<TData, TBuilder> = {
-  options?: SimpleQueryOptions<TData>;
+type Params<TScript extends string, TResult, TBuilder> = {
+  options?: ImmediateQueryOptions<TScript, TResult>;
   schema?: TBuilder;
   argsTypesMap?: readonly ParamTypeMapping[];
 };
 
-export const useApolloQuery = <
-  TResult,
-  TBuilder extends SchemaBuilderType,
-  TScript extends string = string,
-  TData extends Record<TScript, TResult> = Record<TScript, TResult>,
->(
+export const useApolloQuery = <TResult, TBuilder extends SchemaBuilderType, TScript extends string = string>(
   scriptName: TScript,
-  { options, schema, argsTypesMap = [] }: Params<TData, TBuilder> = {},
+  { options, schema, argsTypesMap = [] }: Params<TScript, TResult, TBuilder> = {},
 ) => {
   const script = SchemaBuilder.createScript("query", scriptName, schema, ...argsTypesMap);
 
+  // TODO fix deprecation warning
   const customOptions = Object.assign({}, options || {});
   if (customOptions.onError == null) {
     customOptions.onError = (err) => console.error(err.message);
