@@ -1,5 +1,11 @@
-import { useMutation, useQuery } from "@apollo/client";
-import { MutationInfo, QueryCallback, QueryInfo, createMutation, createQuery } from "apollo-graphql-builder";
+import {
+  ApolloMutationParams,
+  ImmediateQueryOptions,
+  LazyQueryOptions,
+  useApolloLazyQuery,
+  useApolloMutation,
+  useApolloQuery,
+} from "apollo-graphql-builder";
 import { ParamTypeMapping, SchemaBuilder } from "graphql-light-builder";
 
 enum AuthorField {
@@ -10,7 +16,7 @@ enum AuthorField {
   AUDIENCE_FOCUS = "focus",
 }
 
-type IAuthor = {
+type Author = {
   [AuthorField.ID]: string;
   [AuthorField.NAME]: string;
   [AuthorField.HEADSHOT_IMAGE]: string;
@@ -28,17 +34,9 @@ enum AuthorScript {
   DELETE = "authorDelete",
 }
 
-enum AuthorMutationExtraField {
+enum AuthorScriptField {
   AUTHOR_ID = "authorId",
 }
-
-const gqlStringType = "String";
-const MAIN_FIELDS: ParamTypeMapping[] = [
-  [AuthorField.NAME, gqlStringType],
-  [AuthorField.HEADSHOT_IMAGE, gqlStringType],
-  [AuthorField.LOCATION, gqlStringType],
-  [AuthorField.AUDIENCE_FOCUS, `[${gqlStringType}]`],
-];
 
 class AuthorSchemaBuilder extends SchemaBuilder<AuthorField> {
   constructor(entryName?: string | null | undefined, ...initFields: AuthorField[]) {
@@ -46,80 +44,108 @@ class AuthorSchemaBuilder extends SchemaBuilder<AuthorField> {
   }
 }
 
-/**
- * TResult - type of data[query/mutation] result
- */
-class AuthorGql {
-  static create = <TResult extends Partial<IAuthor>>(
-    mutationInfo: MutationInfo<Record<AuthorScript.CREATE, TResult>>,
-    resultSchema?: AuthorSchemaBuilder,
-  ) => createMutation(AuthorScript.CREATE, mutationInfo, resultSchema, MAIN_FIELDS, [AuthorScript.PROFILE_AUTHORS]);
+const GQL_STRING_TYPE = "String";
 
-  static update = <TResult extends Partial<IAuthor>>(
-    mutationInfo: MutationInfo<Record<AuthorScript.UPDATE, TResult>>,
-    resultSchema?: AuthorSchemaBuilder,
-  ) =>
-    createMutation(
-      AuthorScript.UPDATE,
-      mutationInfo,
-      resultSchema,
-      [[AuthorMutationExtraField.AUTHOR_ID, gqlStringType], ...MAIN_FIELDS],
-      [AuthorScript.PROFILE_AUTHORS, AuthorScript.AUTHOR],
-    );
-
-  static delete = (mutationInfo: MutationInfo<Record<AuthorScript.DELETE, boolean>>) =>
-    createMutation(
-      AuthorScript.DELETE,
-      mutationInfo,
-      null,
-      [[AuthorMutationExtraField.AUTHOR_ID, gqlStringType]],
-      [AuthorScript.PROFILE_AUTHORS],
-    );
-
-  static getCurrentProfileAuthors = <
-    TResult extends Partial<IAuthor>,
-    TData extends Record<AuthorScript.PROFILE_AUTHORS, TResult[]>,
-    TCallback extends QueryCallback<TData>,
-  >(
-    queryInfo: QueryInfo<TCallback, TData>,
-    resultSchema?: AuthorSchemaBuilder,
-  ) => createQuery(AuthorScript.PROFILE_AUTHORS, queryInfo, resultSchema || new AuthorSchemaBuilder());
-
-  static getAuthor = <
-    TResult extends Partial<IAuthor>,
-    TData extends Record<AuthorScript.AUTHOR, TResult>,
-    TCallback extends QueryCallback<TData>,
-  >(
-    queryInfo: QueryInfo<TCallback, TData>,
-    resultSchema?: AuthorSchemaBuilder,
-  ) =>
-    createQuery(AuthorScript.AUTHOR, queryInfo, resultSchema || new AuthorSchemaBuilder(), [
-      AuthorField.ID,
-      gqlStringType,
-    ]);
-
-  static initSchema = (initFields: AuthorField[], entryName?: string | null | undefined) =>
-    new AuthorSchemaBuilder(entryName, ...initFields);
-}
+// query with typed answer
+const useGetProfileAuthors = <TResult extends Partial<Author>>({
+  options,
+  schema = new AuthorSchemaBuilder(),
+}: {
+  options?: ImmediateQueryOptions<AuthorScript.PROFILE_AUTHORS, TResult[]>;
+  schema?: AuthorSchemaBuilder;
+}) => {
+  return useApolloQuery(AuthorScript.PROFILE_AUTHORS, {
+    options,
+    schema,
+    argsTypesMap: [[AuthorField.ID, GQL_STRING_TYPE]],
+  });
+};
 
 // answer with typed data
-const { data, loading } = AuthorGql.getAuthor(
-  {
-    callback: useQuery,
-    options: {
-      variables: {
-        [AuthorField.ID]: "testId000",
-      },
-      fetchPolicy: "no-cache",
+type TAuthor = Pick<Author, AuthorField.ID | AuthorField.NAME>;
+
+const schema = new AuthorSchemaBuilder(null, AuthorField.ID, AuthorField.NAME);
+
+const { data: { [AuthorScript.PROFILE_AUTHORS]: authors } = {}, loading } = useGetProfileAuthors<TAuthor>({
+  options: {
+    variables: {
+      [AuthorField.ID]: "testId000",
+    },
+    fetchPolicy: "no-cache",
+  },
+  schema,
+});
+
+authors?.reduce((acc: Record<string, string>, author) => {
+  acc[author.id] = author.name;
+  return acc;
+}, {});
+
+// lazy query with typed answer
+const useLazyGetProfileAuthor = <TResult extends Partial<Author>>({
+  options,
+  schema = new AuthorSchemaBuilder(),
+}: {
+  options?: LazyQueryOptions<AuthorScript.AUTHOR, TResult>;
+  schema?: AuthorSchemaBuilder;
+}) => {
+  return useApolloLazyQuery(AuthorScript.AUTHOR, {
+    options,
+    schema,
+    argsTypesMap: [[AuthorField.ID, GQL_STRING_TYPE]],
+  });
+};
+
+// typed answer
+const [getAuthor] = useLazyGetProfileAuthor<TAuthor>({
+  options: {
+    variables: { [AuthorScriptField.AUTHOR_ID]: "id-007" },
+    onError(e) {
+      alert(`Error: ${e.message}`);
     },
   },
-  AuthorGql.initSchema([AuthorField.ID, AuthorField.NAME]),
-);
-// typed answer
-data?.author[AuthorField.ID];
+  schema,
+});
+
+const author = await getAuthor().then(({ data: { [AuthorScript.AUTHOR]: author } = {} }) => author);
+
+// mutation
+const useMutateAuthor = <TResult extends Partial<Author>, TScript extends AuthorScript.CREATE | AuthorScript.UPDATE>(
+  script: TScript,
+  {
+    options,
+    schema: resultSchema = new AuthorSchemaBuilder(),
+  }: ApolloMutationParams<TScript, TResult, AuthorSchemaBuilder> = {},
+) => {
+  return useApolloMutation(script, {
+    options,
+    schema: resultSchema,
+    argsTypesMap:
+      script === AuthorScript.CREATE ? MAIN_FIELDS : [...MAIN_FIELDS, [AuthorScriptField.AUTHOR_ID, GQL_STRING_TYPE]],
+    affectedQueries: [AuthorScript.PROFILE_AUTHORS, ...(script === AuthorScript.CREATE ? [] : [AuthorScript.AUTHOR])],
+  });
+};
+
+const MAIN_FIELDS: ParamTypeMapping[] = [
+  [AuthorField.NAME, GQL_STRING_TYPE],
+  [AuthorField.HEADSHOT_IMAGE, GQL_STRING_TYPE],
+  [AuthorField.LOCATION, GQL_STRING_TYPE],
+  [AuthorField.AUDIENCE_FOCUS, `[${GQL_STRING_TYPE}]`],
+];
 
 // mutation with typed answer
-const [createAuthor, { data: creationData, loading: creationLoading }] = AuthorGql.create({ callback: useMutation });
+const [createAuthor, { data: creationData, loading: creationLoading }] = useMutateAuthor<TAuthor, AuthorScript.CREATE>(
+  AuthorScript.CREATE,
+);
 
-// mutation result
-creationData?.[AuthorScript.CREATE][AuthorField.ID]; // equals to creationData?.authorCreate?.id
+createAuthor({
+  variables: {
+    [AuthorField.NAME]: "AuthorName",
+    [AuthorField.HEADSHOT_IMAGE]: "AuthorHeadshotUrl",
+    [AuthorField.LOCATION]: "AuthorLocation",
+    [AuthorField.AUDIENCE_FOCUS]: ["audience1", "audience2"],
+  },
+  onCompleted({ [AuthorScript.CREATE]: author }) {
+    alert("Completed author creation: " + author.name);
+  },
+});
