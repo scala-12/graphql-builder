@@ -1,6 +1,6 @@
 {
   "name": "apollo-graphql-builder",
-  "version": "3.0.3",
+  "version": "4.0.0",
   "description": "Tool for automated creation of typed GraphQL scripts with Apollo",
   "type": "module",
   "main": "dist/index.js",
@@ -33,10 +33,12 @@
     "example": "examples"
   },
   "devDependencies": {
+    "@apollo/client": "^3.10.6",
+    "graphql-light-builder": "^0.3.2",
     "prettier": "^3.5.1",
     "typescript": "^5.5.2"
   },
-  "dependencies": {
+  "peerDependencies": {
     "@apollo/client": "^3.10.6",
     "graphql-light-builder": "^0.3.1"
   },
