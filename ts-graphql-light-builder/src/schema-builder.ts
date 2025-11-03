@@ -15,10 +15,10 @@ export abstract class SchemaBuilder<EntryField extends string> {
   protected _complex = new Map<EnumValue<EntryField>, string>();
 
   /** Set of available simple field names that exist in the source schema */
-  private readonly _originSimple: ReadonlySet<EnumValue<EntryField>>;
+  readonly #originSimple: ReadonlySet<EnumValue<EntryField>>;
 
   /** Map[name, info] of available complex fields that exist in the source schema */
-  private readonly _originComplex: ReadonlyMap<EnumValue<EntryField>, ComplexBuilderInit>;
+  readonly #originComplex: ReadonlyMap<EnumValue<EntryField>, ComplexBuilderInit>;
 
   protected constructor(
     simpleFields: EnumValue<EntryField>[] | Record<string, EnumValue<EntryField>>,
@@ -38,8 +38,8 @@ export abstract class SchemaBuilder<EntryField extends string> {
       throw new Error(`SchemaBuilder${name ? `(${name})` : ""} has no defined fields`);
     }
 
-    this._originSimple = simpleSet;
-    this._originComplex = complexMap;
+    this.#originSimple = simpleSet;
+    this.#originComplex = complexMap;
 
     if (initFields?.length) {
       this.add(...initFields);
@@ -74,7 +74,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
     }
 
     const field = builder.name as EntryField;
-    const init = this._originComplex.get(field);
+    const init = this.#originComplex.get(field);
     if (init && builder instanceof init(field).constructor) {
       this._complex.set(field, builder.build());
     }
@@ -84,7 +84,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
 
   /** Set nested subfields for complex field */
   setSubfields(name: EnumValue<EntryField>, ...subfields: string[]): this {
-    const init = this._originComplex.get(name);
+    const init = this.#originComplex.get(name);
     if (init) {
       this.addComplex(init(name).set(...subfields));
     }
@@ -100,12 +100,12 @@ export abstract class SchemaBuilder<EntryField extends string> {
     this.clear();
 
     for (const [field, schema] of from._complex) {
-      if (this._originComplex.has(field)) {
+      if (this.#originComplex.has(field)) {
         this._complex.set(field, schema);
       }
     }
     for (const field of from._simple) {
-      if (this._originSimple.has(field)) {
+      if (this.#originSimple.has(field)) {
         this._simple.add(field);
       }
     }
@@ -117,7 +117,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
   getComplex<T extends SchemaBuilder<string>>(field: string): T | undefined;
   /** Get complex field builder */
   getComplex<T extends SchemaBuilder<string>>(field: string): T | undefined {
-    const init = this._originComplex.get(field as EntryField);
+    const init = this.#originComplex.get(field as EntryField);
     if (init) {
       return init(field) as T;
     }
@@ -130,10 +130,10 @@ export abstract class SchemaBuilder<EntryField extends string> {
    * @param includeSimpleForComplex use simple subfields for complex
    */
   useSimpleOnly(includeSimpleForComplex = false): this {
-    this._simple = new Set(this._originSimple);
+    this._simple = new Set(this.#originSimple);
     this._complex.clear();
     if (includeSimpleForComplex) {
-      for (const [field, init] of this._originComplex) {
+      for (const [field, init] of this.#originComplex) {
         this.addComplex(init(field));
       }
     }
@@ -144,10 +144,10 @@ export abstract class SchemaBuilder<EntryField extends string> {
   /** Add fields (simple or complex) */
   add(...fields: EnumValue<EntryField>[]): this {
     for (const field of fields) {
-      const init = this._originComplex.get(field);
+      const init = this.#originComplex.get(field);
       if (init) {
         this.addComplex(init(field));
-      } else if (this._originSimple.has(field)) {
+      } else if (this.#originSimple.has(field)) {
         this._simple.add(field);
       }
     }
@@ -161,7 +161,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
   }
 
   hasField(field: string): boolean {
-    return this._originSimple.has(field as EntryField) || this._originComplex.has(field as EntryField);
+    return this.#originSimple.has(field as EntryField) || this.#originComplex.has(field as EntryField);
   }
 
   /**
