@@ -1,10 +1,16 @@
 {
   "name": "apollo-graphql-builder",
-  "version": "4.0.0",
-  "description": "Tool for automated creation of typed GraphQL scripts with Apollo",
+  "version": "4.0.1",
+  "description": "A lightweight TypeScript utility for generating typed GraphQL queries and mutations with Apollo Client.",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "files": [
     "dist/**/*"
   ],
@@ -20,18 +26,23 @@
     "format": "prettier --write src/**/*.ts",
     "format:check": "prettier src/**/*.ts"
   },
-  "author": "Kalashnikov Vlad <spotless.quash@gmail.com>",
+  "author": {
+    "name": "Vlad Kalashnikov",
+    "email": "spotless.quash@gmail.com",
+    "url": "https://github.com/scala-12"
+  },
   "license": "MIT",
   "keywords": [
     "graphql",
-    "schema",
     "apollo",
-    "scripts",
-    "builder"
+    "builder",
+    "typescript",
+    "schema",
+    "queries",
+    "mutations",
+    "typed",
+    "graphql-tools"
   ],
-  "directories": {
-    "example": "examples"
-  },
   "devDependencies": {
     "@apollo/client": "^3.10.6",
     "graphql-light-builder": "^0.3.2",
@@ -51,5 +62,11 @@
     "url": "https://github.com/scala-12/graphql-builder/issues",
     "email": "spotless.quash+github@gmail.com"
   },
-  "homepage": "https://github.com/scala-12/graphql-builder/tree/main/ts-apollo-graphql-builder#readme"
+  "homepage": "https://github.com/scala-12/graphql-builder/tree/main/ts-apollo-graphql-builder#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

@@ -1,28 +1,37 @@
 # Apollo GraphQL Builder
 
-This library is designed to make writing easier when using Apollo.
-With this lib you can to quickly edit complex Graphql schemes and scripts and get typed responses.
+This library provides a lightweight and type-safe way to build and execute GraphQL queries and mutations using Apollo Client.
+It simplifies working with complex GraphQL schemas by allowing you to dynamically generate queries and mutations with full TypeScript typing.
 
-You can see the instructions for creating the schemas in `graphql-light-builder`: [GitHub](https://github.com/scala-12/graphql-builder/tree/main/ts-graphql-light-builder), [npmjs](https://www.npmjs.com/package/graphql-light-builder).
+It is built to work in combination with [`graphql-light-builder`](https://github.com/scala-12/graphql-builder/tree/main/ts-graphql-light-builder).
 
-## Installation
+---
 
-```sh
+## 🚀 Installation
+
+```bash
 npm i @apollo/client apollo-graphql-builder graphql-light-builder
 ```
 
-## Hooks
+---
 
-- `useApolloMutation(scriptName, { options, schema, argsTypesMap, affectedQueries })` for use instead `useMutation`
-- `useApolloQuery(scriptName, { options, schema, argsTypesMap = [] }` for use instead useQuery
-- `useApolloLazyQuery(scriptName, { options, schema, argsTypesMap = [] }` for use instead useLazyQuery
+## 📘 Overview
 
-## Examples
+This library wraps Apollo Client hooks (`useQuery`, `useLazyQuery`, `useMutation`) with helper functions that automatically generate queries and mutations based on schema builders.
 
-With this library you can create prepared queries and mutations.
-Details you can find in [examples/index.ts](https://github.com/scala-12/graphql-builder/tree/main/ts-apollo-graphql-builder/examples/index.ts)
+### Available Hooks
 
-Base code:
+| Hook | Description |
+|------|--------------|
+| `useApolloQuery` | Replacement for `useQuery`. Supports schema-based query generation. |
+| `useApolloLazyQuery` | Replacement for `useLazyQuery`. Allows deferred queries with schema typing. |
+| `useApolloMutation` | Replacement for `useMutation`. Simplifies mutations with typed args and affected queries. |
+
+---
+
+## 🧩 Usage Example
+
+You can define your GraphQL schema fields as enums for better type safety:
 
 ```ts
 enum AuthorField {
@@ -32,12 +41,29 @@ enum AuthorField {
   LOCATION = "location",
   AUDIENCE_FOCUS = "focus",
 }
+```
+
+Then create a schema builder based on `graphql-light-builder`:
+
+```ts
+import { SchemaBuilder } from "graphql-light-builder";
 
 class AuthorSchemaBuilder extends SchemaBuilder<AuthorField> {
   constructor(entryName?: string | null | undefined, ...initFields: AuthorField[]) {
     super(AuthorField, entryName, initFields);
   }
 }
+```
+
+---
+
+## 🔍 Queries
+
+To create a typed Apollo query:
+
+```ts
+import { useApolloQuery } from "apollo-graphql-builder";
+import { GqlFieldType } from "graphql-light-builder";
 
 export const useGetAuthor = <TResult extends Partial<IAuthor>>({
   options,
@@ -52,6 +78,30 @@ export const useGetAuthor = <TResult extends Partial<IAuthor>>({
     argsTypesMap: [[AuthorField.ID, GqlFieldType.STRING]],
   });
 };
+```
+
+Usage example:
+
+```ts
+const { data, loading } = useGetAuthor<IAuthor>({
+  options: {
+    variables: { [AuthorField.ID]: "testId000" },
+    fetchPolicy: "no-cache",
+  },
+  schema: new AuthorSchemaBuilder(null, AuthorField.ID, AuthorField.NAME),
+});
+
+console.log(data?.author[AuthorField.ID]);
+```
+
+---
+
+## ✏️ Mutations
+
+You can also create reusable and typed mutation hooks:
+
+```ts
+import { useApolloMutation } from "apollo-graphql-builder";
 
 export const useMutateAuthor = <
   TResult extends Partial<IAuthor>,
@@ -78,22 +128,34 @@ export const useMutateAuthor = <
 };
 ```
 
-With this code we can do mutation and query with typed answer:
+Example usage:
 
 ```ts
-const { data, loading } = useGetAuthor<IAuthor>({
-  options: {
-    variables: {
-      [AuthorField.ID]: "testId000",
-    },
-    fetchPolicy: "no-cache",
-  },
-  schema: new AuthorSchemaBuilder(null, AuthorField.ID, AuthorField.NAME),
-});
+const [createAuthor, { data: creationData, loading: creationLoading }] =
+  useMutateAuthor(AuthorScript.CREATE);
 
-let id = data?.author[AuthorField.ID];
-
-const [createAuthor, { data: creationData, loading: creationLoading }] = useMutateAuthor(AuthorScript.CREATE);
-
-id = creationData?.[AuthorScript.CREATE][AuthorField.ID];
+const newId = creationData?.[AuthorScript.CREATE][AuthorField.ID];
 ```
+
+---
+
+## ⚙️ Features
+
+✅ Strongly typed queries and mutations  
+✅ Dynamic GraphQL generation via schema builders  
+✅ Automatic type mapping for arguments  
+✅ Supports nested and complex GraphQL structures  
+✅ Simplifies integration with Apollo hooks
+
+---
+
+## 📚 Related Projects
+
+- [graphql-light-builder](https://github.com/scala-12/graphql-builder/tree/main/ts-graphql-light-builder) – low-level schema and query builder.
+- [apollo-graphql-builder (npm)](https://www.npmjs.com/package/apollo-graphql-builder)
+
+---
+
+## 🧠 License
+
+MIT © 2025 [scala-12](https://github.com/scala-12)
