@@ -1,13 +1,16 @@
 {
   "name": "graphql-light-builder",
-  "version": "0.3.2",
-  "description": "Simple tool for creation complex schemas with typed GraphQL queries/mutations",
+  "version": "1.0.0",
+  "description": "Type-safe utility for building complex GraphQL schemas and operations in TypeScript",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "files": [
-    "dist/**/*"
-  ],
+  "files": ["dist"],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -26,15 +29,16 @@
     "graphql",
     "schema",
     "builder",
-    "gql",
-    "apollo"
+    "typescript",
+    "graphql-schema",
+    "codegen"
   ],
-  "directories": {
-    "example": "examples"
-  },
   "devDependencies": {
     "prettier": "^3.5.1",
     "typescript": "^5.5.2"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "repository": {
     "type": "git",
@@ -45,5 +49,8 @@
     "url": "https://github.com/scala-12/graphql-builder/issues",
     "email": "spotless.quash+github@gmail.com"
   },
-  "homepage": "https://github.com/scala-12/graphql-builder/tree/main/ts-graphql-light-builder#readme"
+  "homepage": "https://github.com/scala-12/graphql-builder/tree/main/ts-graphql-light-builder#readme",
+  "publishConfig": {
+    "access": "public"
+  }
 }
