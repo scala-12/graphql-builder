@@ -23,7 +23,11 @@
     "format": "prettier --write src/**/*.ts",
     "format:check": "prettier src/**/*.ts"
   },
-  "author": "Kalashnikov Vlad <spotless.quash@gmail.com>",
+  "author": {
+    "name": "Vlad Kalashnikov",
+    "email": "spotless.quash@gmail.com",
+    "url": "https://github.com/scala-12"
+  },
   "license": "MIT",
   "keywords": [
     "graphql",
