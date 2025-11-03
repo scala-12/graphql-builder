@@ -1,4 +1,4 @@
-import { ParamTypeMapping } from "./types";
+import { EnumValue, ParamTypeMapping } from "./types";
 import { camelToSnakeCase } from "./utils";
 
 type ComplexBuilderInit = (name: string) => SchemaBuilder<string>;
@@ -9,19 +9,19 @@ type ComplexBuilderInit = (name: string) => SchemaBuilder<string>;
  */
 export abstract class SchemaBuilder<EntryField extends string> {
   /** Set of simple fields used to build schema */
-  protected _simple = new Set<EntryField>();
+  protected _simple = new Set<EnumValue<EntryField>>();
 
   /** Map[name, subfields] of complex fields used to build schema */
-  protected _complex = new Map<EntryField, string>();
+  protected _complex = new Map<EnumValue<EntryField>, string>();
 
   /** Set of available simple field names that exist in the source schema */
-  private readonly _originSimple: ReadonlySet<string>;
+  private readonly _originSimple: ReadonlySet<EnumValue<EntryField>>;
 
   /** Map[name, info] of available complex fields that exist in the source schema */
-  private readonly _originComplex: ReadonlyMap<string, ComplexBuilderInit>;
+  private readonly _originComplex: ReadonlyMap<EnumValue<EntryField>, ComplexBuilderInit>;
 
   protected constructor(
-    simpleFields: EntryField[] | Record<string, string>,
+    simpleFields: EnumValue<EntryField>[] | Record<string, EnumValue<EntryField>>,
     readonly name: string | null = "",
     initFields?: EntryField[] | null,
     ...complexInfo: [EntryField, ComplexBuilderInit][]
@@ -49,7 +49,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
   }
 
   /** Remove a field from builder if it exists in the origin schema */
-  remove(field: EntryField): this {
+  remove(field: EnumValue<EntryField>): this {
     this._complex.delete(field);
     this._simple.delete(field);
 
@@ -73,16 +73,17 @@ export abstract class SchemaBuilder<EntryField extends string> {
       return this;
     }
 
-    const init = this._originComplex.get(builder.name);
-    if (init && builder instanceof init(builder.name).constructor) {
-      this._complex.set(builder.name as EntryField, builder.build());
+    const field = builder.name as EntryField;
+    const init = this._originComplex.get(field);
+    if (init && builder instanceof init(field).constructor) {
+      this._complex.set(field, builder.build());
     }
 
     return this;
   }
 
   /** Set nested subfields for complex field */
-  setSubfields(name: EntryField, ...subfields: string[]): this {
+  setSubfields(name: EnumValue<EntryField>, ...subfields: string[]): this {
     const init = this._originComplex.get(name);
     if (init) {
       this.addComplex(init(name).set(...subfields));
@@ -112,9 +113,11 @@ export abstract class SchemaBuilder<EntryField extends string> {
     return this;
   }
 
+  getComplex<T extends SchemaBuilder<string>>(field: EnumValue<EntryField>): T;
+  getComplex<T extends SchemaBuilder<string>>(field: string): T | undefined;
   /** Get complex field builder */
   getComplex<T extends SchemaBuilder<string>>(field: string): T | undefined {
-    const init = this._originComplex.get(field);
+    const init = this._originComplex.get(field as EntryField);
     if (init) {
       return init(field) as T;
     }
@@ -127,7 +130,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
    * @param includeSimpleForComplex use simple subfields for complex
    */
   useSimpleOnly(includeSimpleForComplex = false): this {
-    this._simple = new Set(Array.from(this._originSimple as Set<EntryField>));
+    this._simple = new Set(this._originSimple);
     this._complex.clear();
     if (includeSimpleForComplex) {
       for (const [field, init] of this._originComplex) {
@@ -139,7 +142,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
   }
 
   /** Add fields (simple or complex) */
-  add(...fields: EntryField[]): this {
+  add(...fields: EnumValue<EntryField>[]): this {
     for (const field of fields) {
       const init = this._originComplex.get(field);
       if (init) {
@@ -153,8 +156,12 @@ export abstract class SchemaBuilder<EntryField extends string> {
   }
 
   /** Replace current fields */
-  set(...fields: EntryField[]): this {
+  set(...fields: EnumValue<EntryField>[]): this {
     return this.clear().add(...fields);
+  }
+
+  hasField(field: string): boolean {
+    return this._originSimple.has(field as EntryField) || this._originComplex.has(field as EntryField);
   }
 
   /**
