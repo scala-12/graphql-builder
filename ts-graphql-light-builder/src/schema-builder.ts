@@ -74,7 +74,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
     }
 
     const init = this._originComplex.get(builder.name);
-    if (init && builder.constructor === init(builder.name).constructor) {
+    if (init && builder instanceof init(builder.name).constructor) {
       this._complex.set(builder.name as EntryField, builder.build());
     }
 
