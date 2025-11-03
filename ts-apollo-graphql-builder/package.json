@@ -29,9 +29,6 @@
     "scripts",
     "builder"
   ],
-  "directories": {
-    "example": "examples"
-  },
   "devDependencies": {
     "@apollo/client": "^3.10.6",
     "graphql-light-builder": "^0.3.2",
