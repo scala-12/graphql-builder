@@ -1,6 +1,6 @@
 {
   "name": "apollo-graphql-builder",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "A lightweight TypeScript utility for generating typed GraphQL queries and mutations with Apollo Client.",
   "type": "module",
   "main": "./dist/index.js",
