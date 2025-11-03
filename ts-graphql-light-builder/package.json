@@ -1,7 +1,7 @@
 {
   "name": "graphql-light-builder",
-  "version": "0.3.2",
-  "description": "Simple tool for creation complex schemas with typed GraphQL queries/mutations",
+  "version": "1.0.0",
+  "description": "Type-safe utility for building complex GraphQL schemas and operations in TypeScript",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,8 +26,9 @@
     "graphql",
     "schema",
     "builder",
-    "gql",
-    "apollo"
+    "typescript",
+    "graphql-schema",
+    "codegen"
   ],
   "directories": {
     "example": "examples"
