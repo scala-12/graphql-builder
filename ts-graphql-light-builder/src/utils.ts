@@ -1,5 +1,4 @@
-export const camelToSnakeCase = (text: string, toUpper = false) => {
-  const result = text.split(/(?=[A-Z])/).join("_");
-
-  return toUpper ? result.toUpperCase() : result.toLowerCase();
+export const camelToSnakeCase = (str: string, upper = false) => {
+  const text = str.replace(/([a-z0-9])([A-Z])/g, "$1_$2");
+  return upper ? text.toUpperCase() : text.toLowerCase();
 };
