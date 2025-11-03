@@ -9,10 +9,10 @@ type ComplexBuilderInit = (name: string) => SchemaBuilder<string>;
  */
 export abstract class SchemaBuilder<EntryField extends string> {
   /** Set of simple fields used to build schema */
-  protected _simple = new Set<EnumValue<EntryField>>();
+  readonly #simple = new Set<EnumValue<EntryField>>();
 
   /** Map[name, subfields] of complex fields used to build schema */
-  protected _complex = new Map<EnumValue<EntryField>, string>();
+  readonly #complex = new Map<EnumValue<EntryField>, string>();
 
   /** Set of available simple field names that exist in the source schema */
   readonly #originSimple: ReadonlySet<EnumValue<EntryField>>;
@@ -50,16 +50,16 @@ export abstract class SchemaBuilder<EntryField extends string> {
 
   /** Remove a field from builder if it exists in the origin schema */
   remove(field: EnumValue<EntryField>): this {
-    this._complex.delete(field);
-    this._simple.delete(field);
+    this.#complex.delete(field);
+    this.#simple.delete(field);
 
     return this;
   }
 
   /** Remove all fields from builder */
   clear(): this {
-    this._complex.clear();
-    this._simple.clear();
+    this.#complex.clear();
+    this.#simple.clear();
 
     return this;
   }
@@ -76,7 +76,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
     const field = builder.name as EntryField;
     const init = this.#originComplex.get(field);
     if (init && builder instanceof init(field).constructor) {
-      this._complex.set(field, builder.build());
+      this.#complex.set(field, builder.build());
     }
 
     return this;
@@ -99,14 +99,14 @@ export abstract class SchemaBuilder<EntryField extends string> {
 
     this.clear();
 
-    for (const [field, schema] of from._complex) {
+    for (const [field, schema] of from.#complex) {
       if (this.#originComplex.has(field)) {
-        this._complex.set(field, schema);
+        this.#complex.set(field, schema);
       }
     }
-    for (const field of from._simple) {
+    for (const field of from.#simple) {
       if (this.#originSimple.has(field)) {
-        this._simple.add(field);
+        this.#simple.add(field);
       }
     }
 
@@ -130,8 +130,12 @@ export abstract class SchemaBuilder<EntryField extends string> {
    * @param includeSimpleForComplex use simple subfields for complex
    */
   useSimpleOnly(includeSimpleForComplex = false): this {
-    this._simple = new Set(this.#originSimple);
-    this._complex.clear();
+    this.#simple.clear();
+    for (const f of this.#originSimple) {
+      this.#simple.add(f);
+    }
+
+    this.#complex.clear();
     if (includeSimpleForComplex) {
       for (const [field, init] of this.#originComplex) {
         this.addComplex(init(field));
@@ -148,7 +152,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
       if (init) {
         this.addComplex(init(field));
       } else if (this.#originSimple.has(field)) {
-        this._simple.add(field);
+        this.#simple.add(field);
       }
     }
 
@@ -169,7 +173,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
    * @param withName if false then don't add prefix with entry name
    */
   build(withName = true): string {
-    const parts = [...this._simple, ...this._complex.values()];
+    const parts = [...this.#simple, ...this.#complex.values()];
     if (parts.length === 0) {
       if (!(withName && this.name)) {
         return "";
