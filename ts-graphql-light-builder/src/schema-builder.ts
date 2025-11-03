@@ -1,50 +1,42 @@
 import { ParamTypeMapping } from "./types";
 import { camelToSnakeCase } from "./utils";
 
-type BuilderInit = (name: string) => SchemaBuilder<string>;
+type ComplexBuilderInit = (name: string) => SchemaBuilder<string>;
 
 /** Abstract class for creating a schema. The entry must have only string keys */
 export abstract class SchemaBuilder<EntryField extends string> {
   /** Set of simple fields used to build schema */
-  protected _simple: Set<EntryField>;
+  protected _simple = new Set<EntryField>();
 
   /** Map[name, subfields] of complex fields used to build schema */
-  protected _complex: Map<EntryField, string>;
+  protected _complex = new Map<EntryField, string>();
 
   /** Set of available simple field names that exist in the source schema */
-  private _originSimple?: ReadonlySet<string>;
+  private readonly _originSimple: ReadonlySet<string>;
 
   /** Map[name, info] of available complex fields that exist in the source schema */
-  private _originComplex?: ReadonlyMap<string, BuilderInit>;
+  private readonly _originComplex: ReadonlyMap<string, ComplexBuilderInit>;
 
-  /**
-   * By default, creates a schema using only simple fields
-   * @param simpleFields Array of available simple keys or Enum with field names. May include complex keys if complex keys are specified.
-   * @param name schema entity name used in scripts
-   * @param infoAboutComplex An array containing information about a complex field as Array[fieldName, fieldConstructor]
-   */
   protected constructor(
-    simpleFields: EntryField[] | { [k: string]: string },
-    readonly name: string | null | undefined = "",
-    initFields?: EntryField[] | null | undefined,
-    ...infoAboutComplex: [EntryField, BuilderInit][]
+    simpleFields: EntryField[] | Record<string, string>,
+    readonly name: string | null = "",
+    initFields?: EntryField[] | null,
+    ...complexInfo: [EntryField, ComplexBuilderInit][]
   ) {
-    this._simple = new Set();
-    this._complex = new Map();
+    const simpleSet = new Set(Array.isArray(simpleFields) ? simpleFields : Object.values(simpleFields));
+    const complexMap = new Map(complexInfo);
 
-    if (infoAboutComplex?.length) {
-      this._originComplex = new Map(infoAboutComplex.map(([field, builderInit]) => [field as string, builderInit]));
+    // remove simple fields from  complex
+    for (const field of complexMap.keys()) {
+      simpleSet.delete(field);
     }
 
-    const fields = new Set((Array.isArray(simpleFields) ? simpleFields : Object.values(simpleFields)) as string[]);
-    this._originComplex?.forEach((_, field) => {
-      fields.delete(field);
-    });
-    this._originSimple = fields;
-
-    if (this._originSimple?.size === 0 && this._originComplex?.size === 0) {
-      throw new Error("Schema does not include fields");
+    if (simpleSet.size === 0 && complexMap.size === 0) {
+      throw new Error(`SchemaBuilder${name ? `(${name})` : ""} has no defined fields`);
     }
+
+    this._originSimple = simpleSet;
+    this._originComplex = complexMap;
 
     if (initFields?.length) {
       this.add(...initFields);
@@ -63,8 +55,8 @@ export abstract class SchemaBuilder<EntryField extends string> {
 
   /** Remove all fields from builder */
   clear(): this {
-    this._complex = new Map();
-    this._simple = new Set();
+    this._complex.clear();
+    this._simple.clear();
 
     return this;
   }
@@ -72,15 +64,16 @@ export abstract class SchemaBuilder<EntryField extends string> {
   /**
    * Add complex field for schema builder if it available.
    * If complex field used before, it will be replaced.
-   * @param complex Builder of complex field with a given set of subfields
+   * @param builder Builder of complex field with a given set of subfields
    */
-  addComplex(complex: SchemaBuilder<string> | undefined | null): this {
-    if (complex != null && complex.name) {
-      if (complex.constructor === this.getComplex(complex.name)?.constructor) {
-        if (this._originComplex?.has(complex.name)) {
-          this._complex.set(complex.name as EntryField, complex.build());
-        }
-      }
+  addComplex(builder?: SchemaBuilder<string> | null): this {
+    if (!builder?.name) {
+      return this;
+    }
+
+    const init = this._originComplex.get(builder.name);
+    if (init && builder.constructor === init(builder.name).constructor) {
+      this._complex.set(builder.name as EntryField, builder.build());
     }
 
     return this;
@@ -92,37 +85,33 @@ export abstract class SchemaBuilder<EntryField extends string> {
    * @param subfields Subfield of nested field
    */
   setSubfields(name: EntryField, ...subfields: string[]): this {
-    if (this._originComplex?.has(name)) {
-      const complex = this.getComplex(name)?.set(...subfields);
-      this.addComplex(complex);
+    const init = this._originComplex.get(name);
+    if (init) {
+      this.addComplex(init(name).set(...subfields));
     }
-
     return this;
   }
 
   /**
    * Set the same fields as in another builder
-   * @param another Builder with same type
+   * @param from Builder with same type
    * @returns builder with setted fields
    */
-  copyFields(another?: this | null | undefined): this {
-    if (another) {
-      this._complex.clear();
-      if (another._complex.size) {
-        another._complex.forEach((schema, field) => {
-          if (this._originComplex?.has(field)) {
-            this._complex.set(field, schema);
-          }
-        });
-      }
+  copyFields(from?: this | null): this {
+    if (!from) {
+      return this.clear();
+    }
 
-      this._simple.clear();
-      if (another._simple.size) {
-        another._simple.forEach((field) => {
-          if (another._originSimple?.has(field)) {
-            this.add(field);
-          }
-        });
+    this.clear();
+
+    for (const [field, schema] of from._complex) {
+      if (this._originComplex.has(field)) {
+        this._complex.set(field, schema);
+      }
+    }
+    for (const field of from._simple) {
+      if (this._originSimple.has(field)) {
+        this._simple.add(field);
       }
     }
 
@@ -133,26 +122,25 @@ export abstract class SchemaBuilder<EntryField extends string> {
    * Get copy of complex field without settings
    * @param field The name of the complex field that must be in the source schema
    */
-  getComplex<TComplex extends SchemaBuilder<string>>(field: string) {
-    const builderInit = this._originComplex?.get(field);
-    if (builderInit != null) {
-      return builderInit(field) as TComplex;
+  getComplex<T extends SchemaBuilder<string>>(field: string) {
+    const init = this._originComplex.get(field);
+    if (init) {
+      return init(field) as T;
     }
+
+    return undefined;
   }
 
   /**
    * Set all available simple fields for use in the schema
-   * @param complexWithSimple For each complex field use simple subfields
+   * @param includeSimpleForComplex For each complex field use simple subfields
    */
-  useSimpleOnly(complexWithSimple = false): this {
-    if (this._originSimple != null) {
-      this._simple.clear();
-      this._originSimple.forEach((e) => this._simple.add(e as EntryField));
-    }
-    if (this._originComplex != null) {
-      this._complex.clear();
-      if (complexWithSimple) {
-        this._originComplex.forEach((builderInit, field) => this.addComplex(builderInit(field)));
+  useSimpleOnly(includeSimpleForComplex = false): this {
+    this._simple = new Set(Array.from(this._originSimple as Set<EntryField>));
+    this._complex.clear();
+    if (includeSimpleForComplex) {
+      for (const [field, init] of this._originComplex) {
+        this.addComplex(init(field));
       }
     }
 
@@ -165,43 +153,14 @@ export abstract class SchemaBuilder<EntryField extends string> {
    * @param fields added fields
    */
   add(...fields: EntryField[]): this {
-    enum FieldType {
-      COMPLEX,
-      SIMPLE,
-      UNDEFINED,
-    }
-    const groupedFields = fields.reduce(
-      (acc, field) => {
-        let key: FieldType | undefined;
-        if (this._originComplex?.has(field as string)) {
-          if (!this._complex.has(field)) {
-            key = FieldType.COMPLEX;
-          }
-        } else if (this._originSimple?.has(field as string)) {
-          key = FieldType.SIMPLE;
-        }
-        if (key == null) {
-          key = FieldType.UNDEFINED;
-        }
-        acc[key].push(field);
-
-        return acc;
-      },
-      {
-        [FieldType.COMPLEX]: [] as EntryField[],
-        [FieldType.SIMPLE]: [] as EntryField[],
-        [FieldType.UNDEFINED]: [] as EntryField[],
-      },
-    );
-
-    groupedFields[FieldType.COMPLEX].forEach((e) => {
-      const builderInit = this._originComplex?.get(e as string);
-      if (builderInit != null) {
-        this.addComplex(builderInit(e as string));
+    for (const field of fields) {
+      const init = this._originComplex.get(field);
+      if (init) {
+        this.addComplex(init(field));
+      } else if (this._originSimple.has(field)) {
+        this._simple.add(field);
       }
-    });
-
-    groupedFields[FieldType.SIMPLE].forEach((e) => this._simple.add(e));
+    }
 
     return this;
   }
@@ -212,52 +171,53 @@ export abstract class SchemaBuilder<EntryField extends string> {
    * @param fields added fields
    */
   set(...fields: EntryField[]): this {
-    this.clear();
-    return this.add(...fields);
+    return this.clear().add(...fields);
   }
 
   /**
    * Build a schema with the provided fields and with or without the schema name
-   * @param addEntryName if false then dont add prefix with entry name
+   * @param withName if false then dont add prefix with entry name
    * @returns GraphQL schema string with name or not
    */
-  build(addEntryName = true): string {
-    const simpleFields = Array.from(this._simple.values()) as string[];
-    const complexFields = Array.from(this._complex.values());
-    const fields = simpleFields.concat(complexFields);
+  build(withName = true): string {
+    const parts = [...this._simple, ...this._complex.values()];
+    if (parts.length === 0) {
+      if (!(withName && this.name)) {
+        return "";
+      }
+      return this.name;
+    }
 
-    const fieldsSchema = fields.length ? `{${simpleFields.concat(complexFields).join(" ")}}` : "";
+    const content = `{ ${parts.join(" ")} }`;
 
-    return (addEntryName ? this.name + " " : "") + fieldsSchema;
+    return (withName && this.name ? `${this.name} ` : "") + content;
+  }
+
+  /** Create name of operation based on script name */
+  static createOperationName(name: string): string {
+    return camelToSnakeCase(name, true);
   }
 
   /**
-   * Create name of operation based on script name
-   * @param scriptName
-   */
-  static createOperationName = (scriptName: string) => camelToSnakeCase(scriptName, true);
-
-  /**
    * Create script as query or mutation
-   * @param resultSchema Used for building schema result of script. May be as builder or string
-   * @param paramsMapping Mapping a schema field to a GraphQL type with ordering
+   * @param result Used for building schema result of script. May be as builder or string
+   * @param params Mapping a schema field to a GraphQL type with ordering
    */
   static createScript(
-    scriptType: "query" | "mutation",
+    type: "query" | "mutation",
     name: string,
-    resultSchema: SchemaBuilder<string> | string | undefined | null = "",
-    ...paramsMapping: ParamTypeMapping[]
-  ) {
-    const args = paramsMapping?.map(([fName]) => `${fName}: $${fName}`).join(", ");
-    const schema =
-      (args?.length ? `(${args})` : "") +
-      (resultSchema != null ? (typeof resultSchema === "string" ? resultSchema : resultSchema.build(false)) : "");
+    result?: SchemaBuilder<string> | string | null,
+    ...params: ParamTypeMapping[]
+  ): string {
+    const args = params.map(([key]) => `${key}: $${key}`).join(", ");
 
-    const operationName = `${scriptType} ${SchemaBuilder.createOperationName(name)}`;
+    const argSection = args ? `(${args})` : "";
+    const resultSection = !result ? "" : typeof result === "string" ? result : result.build(false);
 
-    const preparedParams = paramsMapping?.map(([fName, fType]) => `$${fName}: ${fType || "String!"}`).join("\n");
-    const params = preparedParams != null && preparedParams.length > 0 ? `(${preparedParams})` : "";
+    const paramDefs = params.map(([key, type]) => `$${key}: ${type ?? "String!"}`).join(", ");
 
-    return `${operationName} ${params} { ${name} ${schema} }`;
+    const opName = SchemaBuilder.createOperationName(name);
+
+    return `${type} ${opName}${paramDefs ? `(${paramDefs})` : ""} {${name}${argSection} ${resultSection}}`;
   }
 }
