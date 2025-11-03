@@ -3,7 +3,10 @@ import { camelToSnakeCase } from "./utils";
 
 type ComplexBuilderInit = (name: string) => SchemaBuilder<string>;
 
-/** Abstract class for creating a schema. The entry must have only string keys */
+/**
+ * Abstract class for building GraphQL schemas.
+ * Supports simple and complex (nested) fields.
+ */
 export abstract class SchemaBuilder<EntryField extends string> {
   /** Set of simple fields used to build schema */
   protected _simple = new Set<EntryField>();
@@ -62,9 +65,8 @@ export abstract class SchemaBuilder<EntryField extends string> {
   }
 
   /**
-   * Add complex field for schema builder if it available.
+   * Add complex field builder
    * If complex field used before, it will be replaced.
-   * @param builder Builder of complex field with a given set of subfields
    */
   addComplex(builder?: SchemaBuilder<string> | null): this {
     if (!builder?.name) {
@@ -79,11 +81,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
     return this;
   }
 
-  /**
-   * Set subfields to complex field
-   * @param name Name of nested field
-   * @param subfields Subfield of nested field
-   */
+  /** Set nested subfields for complex field */
   setSubfields(name: EntryField, ...subfields: string[]): this {
     const init = this._originComplex.get(name);
     if (init) {
@@ -92,11 +90,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
     return this;
   }
 
-  /**
-   * Set the same fields as in another builder
-   * @param from Builder with same type
-   * @returns builder with setted fields
-   */
+  /** Copy fields from another builder */
   copyFields(from?: this | null): this {
     if (!from) {
       return this.clear();
@@ -118,11 +112,8 @@ export abstract class SchemaBuilder<EntryField extends string> {
     return this;
   }
 
-  /**
-   * Get copy of complex field without settings
-   * @param field The name of the complex field that must be in the source schema
-   */
-  getComplex<T extends SchemaBuilder<string>>(field: string) {
+  /** Get complex field builder */
+  getComplex<T extends SchemaBuilder<string>>(field: string): T | undefined {
     const init = this._originComplex.get(field);
     if (init) {
       return init(field) as T;
@@ -132,8 +123,8 @@ export abstract class SchemaBuilder<EntryField extends string> {
   }
 
   /**
-   * Set all available simple fields for use in the schema
-   * @param includeSimpleForComplex For each complex field use simple subfields
+   * Use only simple fields
+   * @param includeSimpleForComplex use simple subfields for complex
    */
   useSimpleOnly(includeSimpleForComplex = false): this {
     this._simple = new Set(Array.from(this._originSimple as Set<EntryField>));
@@ -147,11 +138,7 @@ export abstract class SchemaBuilder<EntryField extends string> {
     return this;
   }
 
-  /**
-   * Add fields to schema.
-   * If the field is complex, default fields will be setted.
-   * @param fields added fields
-   */
+  /** Add fields (simple or complex) */
   add(...fields: EntryField[]): this {
     for (const field of fields) {
       const init = this._originComplex.get(field);
@@ -165,19 +152,14 @@ export abstract class SchemaBuilder<EntryField extends string> {
     return this;
   }
 
-  /**
-   * Use only the specified fields.
-   * If the field is complex, default fields will be added.
-   * @param fields added fields
-   */
+  /** Replace current fields */
   set(...fields: EntryField[]): this {
     return this.clear().add(...fields);
   }
 
   /**
-   * Build a schema with the provided fields and with or without the schema name
-   * @param withName if false then dont add prefix with entry name
-   * @returns GraphQL schema string with name or not
+   * Build GraphQL schema string
+   * @param withName if false then don't add prefix with entry name
    */
   build(withName = true): string {
     const parts = [...this._simple, ...this._complex.values()];
@@ -200,8 +182,8 @@ export abstract class SchemaBuilder<EntryField extends string> {
 
   /**
    * Create script as query or mutation
-   * @param result Used for building schema result of script. May be as builder or string
-   * @param params Mapping a schema field to a GraphQL type with ordering
+   * @param result Used for building schema result of script. May be builder or string
+   * @param params Mapping schema field to GraphQL type
    */
   static createScript(
     type: "query" | "mutation",
