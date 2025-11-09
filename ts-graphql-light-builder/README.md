@@ -2,8 +2,6 @@
 
 A lightweight TypeScript library for building **GraphQL schemas and scripts** with support for **nested (complex) fields** and quick modifications.  
 
-Used as a dependency in [`apollo-graphql-builder`](https://github.com/scala-12/graphql-builder/tree/main/ts-apollo-graphql-builder) ([npm](https://www.npmjs.com/package/apollo-graphql-builder)).
-
 ---
 
 ## Features

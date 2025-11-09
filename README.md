@@ -23,76 +23,23 @@ This monorepo provides tools for both **schema generation** and **Apollo Client 
 
 ---
 
-### [`apollo-graphql-builder`](https://github.com/scala-12/graphql-builder/tree/main/ts-apollo-graphql-builder)
-
-> ⚡ A higher-level utility for **Apollo Client** that automatically generates typed queries and mutations from `graphql-light-builder` schemas.
-
-- Replaces `useQuery`, `useLazyQuery`, and `useMutation` with typed equivalents.
-- Automatically creates scripts and variable mappings.
-- Greatly reduces boilerplate for GraphQL operations.
-
-📘 **Documentation:**  
-[GitHub → ts-apollo-graphql-builder](https://github.com/scala-12/graphql-builder/tree/main/ts-apollo-graphql-builder)  
-[npm → apollo-graphql-builder](https://www.npmjs.com/package/apollo-graphql-builder)
-
----
-
 ## 🧠 Why Use GraphQL Builder?
 
-✅ **Type-safe GraphQL generation** – build queries without hardcoding strings  
-✅ **Easy maintenance** – update nested fields or arguments in one place  
-✅ **Full Apollo compatibility** – seamlessly integrate into React or Next.js apps  
+✅ **Type-safe GraphQL generation** – build queries without hardcoding strings
+✅ **Easy maintenance** – update nested fields or arguments in one place
+✅ **Full Apollo compatibility** – seamlessly integrate into React or Next.js apps
 ✅ **Lightweight & modular** – use one or both libraries independently
 
 ---
 
-## 🚀 Quick Example
+## 🚀 Examples
 
-```ts
-// Define schema
-enum AuthorField {
-  ID = "id",
-  NAME = "name",
-}
-
-class AuthorSchemaBuilder extends SchemaBuilder<AuthorField> {
-  constructor() {
-    super(AuthorField, "author", [AuthorField.ID, AuthorField.NAME]);
-  }
-}
-
-// Generate query
-const query = SchemaBuilder.createScript(
-  "query",
-  "getAuthor",
-  new AuthorSchemaBuilder()
-);
-
-console.log(query);
-// query GET_AUTHOR { author { id name } }
-```
-
-Use it directly in Apollo:
-
-```ts
-const { data } = useApolloQuery("getAuthor", {
-  schema: new AuthorSchemaBuilder(),
-});
-```
-
----
+See in [examples](https://www.npmjs.com/package/graphql-light-builder/tree/main/examples) directory
 
 ## 🧩 Monorepo Structure
 
 ```
 graphql-builder/
 ├── ts-graphql-light-builder/   # Core schema and query builder
-├── ts-apollo-graphql-builder/  # Apollo Client integration
 └── examples/                   # Usage examples and demos
 ```
-
----
-
-## 📄 License
-
-MIT © 2025 [scala-12](https://github.com/scala-12)
