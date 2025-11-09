@@ -1,17 +1,19 @@
 {
-  "name": "graphql-light-builder",
-  "version": "1.0.1",
-  "description": "Type-safe utility for building complex GraphQL schemas and operations in TypeScript",
+  "name": "apollo-graphql-builder",
+  "version": "4.0.1",
+  "description": "A lightweight TypeScript utility for generating typed GraphQL queries and mutations with Apollo Client.",
   "type": "module",
-  "main": "dist/index.js",
-  "files": ["dist"],
-  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist/**/*"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -32,29 +34,38 @@
   "license": "MIT",
   "keywords": [
     "graphql",
-    "schema",
+    "apollo",
     "builder",
     "typescript",
-    "graphql-schema",
-    "codegen"
+    "schema",
+    "queries",
+    "mutations",
+    "typed",
+    "graphql-tools"
   ],
   "devDependencies": {
+    "@apollo/client": "^3.10.6",
+    "graphql-light-builder": "^0.3.2",
     "prettier": "^3.5.1",
     "typescript": "^5.5.2"
   },
-  "engines": {
-    "node": ">=18"
+  "peerDependencies": {
+    "@apollo/client": "^3.10.6",
+    "graphql-light-builder": "^0.3.1"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/scala-12/graphql-builder.git",
-    "directory": "ts-graphql-light-builder"
+    "directory": "ts-apollo-graphql-builder"
   },
   "bugs": {
     "url": "https://github.com/scala-12/graphql-builder/issues",
     "email": "spotless.quash+github@gmail.com"
   },
-  "homepage": "https://github.com/scala-12/graphql-builder/tree/main/ts-graphql-light-builder#readme",
+  "homepage": "https://github.com/scala-12/graphql-builder/tree/main/ts-apollo-graphql-builder#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "publishConfig": {
     "access": "public"
   }
