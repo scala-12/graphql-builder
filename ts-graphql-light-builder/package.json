@@ -1,6 +1,6 @@
 {
   "name": "graphql-light-builder",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Type-safe utility for building complex GraphQL schemas and operations in TypeScript",
   "type": "module",
   "main": "dist/index.js",
