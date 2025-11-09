@@ -1,4 +1,4 @@
-import { EnumValue, ParamTypeMapping } from "./types";
+import { EnumValue } from "./types";
 import { camelToSnakeCase } from "./utils";
 
 type ComplexBuilderInit = (name: string) => SchemaBuilder<string>;
@@ -194,20 +194,21 @@ export abstract class SchemaBuilder<EntryField extends string> {
   /**
    * Create script as query or mutation
    * @param result Used for building schema result of script. May be builder or string
-   * @param params Mapping schema field to GraphQL type
+   * @param argsTyping Mapping schema field to GraphQL type
    */
   static createScript(
     type: "query" | "mutation",
     name: string,
     result?: SchemaBuilder<string> | string | null,
-    ...params: ParamTypeMapping[]
+    argsTyping: Record<string, string> = {},
   ): string {
-    const args = params.map(([key]) => `${key}: $${key}`).join(", ");
+    const argsEntries = Object.entries(argsTyping);
+    const args = argsEntries.map(([key]) => `${key}: $${key}`).join(", ");
 
     const argSection = args ? `(${args})` : "";
     const resultSection = !result ? "" : typeof result === "string" ? result : result.build(false);
 
-    const paramDefs = params.map(([key, type]) => `$${key}: ${type ?? "String!"}`).join(", ");
+    const paramDefs = argsEntries.map(([key, type]) => `$${key}: ${type ?? "String!"}`).join(", ");
 
     const opName = SchemaBuilder.createOperationName(name);
 
