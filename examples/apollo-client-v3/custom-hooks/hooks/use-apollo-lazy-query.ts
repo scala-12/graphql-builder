@@ -1,5 +1,5 @@
 import { gql, useLazyQuery } from "@apollo/client";
-import { SchemaBuilder } from "graphql-light-builder";
+import { createScript } from "graphql-light-builder";
 import { ApolloQueryParams, SchemaBuilderType } from "../types";
 
 export const useApolloLazyQuery = <
@@ -7,12 +7,23 @@ export const useApolloLazyQuery = <
   TBuilder extends SchemaBuilderType,
   TVariables extends string,
   TVariablesMap extends Record<TVariables, unknown>,
-  TScript extends string = string,
+  TScript extends string = string
 >(
   scriptName: TScript,
-  { options, schema, argsTyping }: ApolloQueryParams<true, TScript, TResult, TBuilder, TVariables, TVariablesMap> = {},
+  {
+    options,
+    schema,
+    argsTyping,
+  }: ApolloQueryParams<
+    true,
+    TScript,
+    TResult,
+    TBuilder,
+    TVariables,
+    TVariablesMap
+  > = {}
 ) => {
-  const script = SchemaBuilder.createScript("query", scriptName, schema, argsTyping);
+  const script = createScript("query", scriptName, schema, argsTyping);
 
   // TODO fix deprecation warning
   const customOptions = Object.assign({}, options ?? {});

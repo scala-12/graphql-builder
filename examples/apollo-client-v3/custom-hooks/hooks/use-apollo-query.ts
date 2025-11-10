@@ -1,5 +1,5 @@
 import { gql, useQuery } from "@apollo/client";
-import { SchemaBuilder } from "graphql-light-builder";
+import { createScript } from "graphql-light-builder";
 import { ApolloQueryParams, SchemaBuilderType } from "../types";
 
 export const useApolloQuery = <
@@ -23,12 +23,7 @@ export const useApolloQuery = <
     TVariablesMap
   > = {}
 ) => {
-  const script = SchemaBuilder.createScript(
-    "query",
-    scriptName,
-    schema,
-    argsTyping
-  );
+  const script = createScript("query", scriptName, schema, argsTyping);
 
   // TODO fix deprecation warning
   const customOptions = Object.assign({}, options ?? {});
