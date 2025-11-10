@@ -1,6 +1,7 @@
 # GraphQL Light Builder
 
 A lightweight TypeScript library for building **GraphQL schemas and scripts** with support for **nested (complex) fields** and quick modifications.  
+For more info see [monorepo info](https://github.com/scala-12/graphql-builder/tree/main/ts-graphql-light-builder)
 
 ---
 
