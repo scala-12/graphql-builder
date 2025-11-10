@@ -1,5 +1,5 @@
 import { gql, useQuery } from "@apollo/client";
-import { SchemaBuilder } from "graphql-light-builder";
+import { SchemaBuilder, createScript } from "graphql-light-builder";
 
 enum PublisherField {
     NAME = 'name',
@@ -88,7 +88,7 @@ const authorWithSimpleTree = new AuthorSchemaBuilder().add(...Object.values(Auth
 /**
  * This code returns query script
  */
-const queryScript = SchemaBuilder.createScript("query", 'getAuthor', authorWithSimpleTree);
+const queryScript = createScript("query", 'getAuthor', authorWithSimpleTree);
 
 /**
  * Use script in apollo

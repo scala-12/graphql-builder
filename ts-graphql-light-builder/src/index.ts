@@ -1,3 +1,2 @@
-import { SchemaBuilder } from "./schema-builder";
-
-export { SchemaBuilder };
+export * from "./schema-builder";
+export * from "./utils";

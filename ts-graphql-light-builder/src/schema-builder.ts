@@ -1,5 +1,4 @@
 import { EnumValue } from "./types";
-import { camelToSnakeCase } from "./utils";
 
 type ComplexBuilderInit = (name: string) => SchemaBuilder<string>;
 
@@ -184,34 +183,5 @@ export abstract class SchemaBuilder<EntryField extends string> {
     const content = `{ ${parts.join(" ")} }`;
 
     return (withName && this.name ? `${this.name} ` : "") + content;
-  }
-
-  /** Create name of operation based on script name */
-  static createOperationName(name: string): string {
-    return camelToSnakeCase(name, true);
-  }
-
-  /**
-   * Create script as query or mutation
-   * @param result Used for building schema result of script. May be builder or string
-   * @param argsTyping Mapping schema field to GraphQL type
-   */
-  static createScript(
-    type: "query" | "mutation",
-    name: string,
-    result?: SchemaBuilder<string> | string | null,
-    argsTyping: Record<string, string> = {},
-  ): string {
-    const argsEntries = Object.entries(argsTyping);
-    const args = argsEntries.map(([key]) => `${key}: $${key}`).join(", ");
-
-    const argSection = args ? `(${args})` : "";
-    const resultSection = !result ? "" : typeof result === "string" ? result : result.build(false);
-
-    const paramDefs = argsEntries.map(([key, type]) => `$${key}: ${type ?? "String!"}`).join(", ");
-
-    const opName = SchemaBuilder.createOperationName(name);
-
-    return `${type} ${opName}${paramDefs ? `(${paramDefs})` : ""} {${name}${argSection} ${resultSection}}`;
   }
 }
